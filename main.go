@@ -79,7 +79,7 @@ func getWhere(data any, startIndex int) (query string, args []any) {
 	for i := range t.NumField() {
 		dbTag := t.Field(i).Tag.Get("db")
 		val := v.Field(i)
-		if dbTag != "" && dbTag != "-" && val.IsNil() {
+		if dbTag != "" && dbTag != "-" && val.Interface() != nil {
 			colums = append(colums, fmt.Sprintf("%s = $%d", dbTag, startIndex+i+1))
 			args = append(args, val.Interface())
 		}
@@ -94,7 +94,7 @@ func getColumsUpdate(data any) (colums []string, args []any) {
 	for i := range t.NumField() {
 		dbTag := t.Field(i).Tag.Get("db")
 		val := v.Field(i)
-		if dbTag != "" && dbTag != "-" && val.IsNil() {
+		if dbTag != "" && dbTag != "-" && val.Interface() != nil {
 			colums = append(colums, fmt.Sprintf("%s = $%d", dbTag, i+1))
 			args = append(args, val.Interface())
 		}
