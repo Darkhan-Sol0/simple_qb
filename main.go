@@ -1,4 +1,4 @@
-package sqb
+package simple_qb
 
 import (
 	"fmt"
