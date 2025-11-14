@@ -13,7 +13,24 @@ var (
 	Update = "UPDATE %s SET (%s) = (%s)"
 )
 
-const tag = "db"
+const (
+	tag = "db"
+	op  = "op"
+)
+
+// пока такие теги, может посже изменить
+var opMap = map[string]string{
+	"eq":      "=",           // равно
+	"neq":     "<>",          // неравно
+	"lt":      "<",           // меньше
+	"lte":     "<=",          // меньше или равно
+	"gt":      ">",           // больше
+	"gte":     ">=",          // больше или равно
+	"like":    "LIKE",        // похоже на (для строковых выражений)
+	"in":      "IN",          // входит в перечень
+	"null":    "IS NULL",     // пустое значение
+	"notnull": "IS NOT NULL", // непустое значение
+}
 
 func QueryGenerate(qtype, table string, data, params any) (query string, args []any) {
 	var colums []string
@@ -91,14 +108,16 @@ func getPlaceholders(count int) (placeholders []string) {
 	return
 }
 
+// Нужно както впиндюрить оператор OR
 func getWhere(data any, startIndex int) (query string) {
 	var colums []string
 	v := reflect.ValueOf(data)
 	t := v.Type()
 	for i := range t.NumField() {
-		dbTag := t.Field(i).Tag.Get("db")
-		if dbTag != "" && dbTag != "-" {
-			colums = append(colums, fmt.Sprintf("%s = $%d", dbTag, startIndex+i+1))
+		dbTag := t.Field(i).Tag.Get(tag)
+		opTag := t.Field(i).Tag.Get(op)
+		if dbTag != "" && dbTag != "-" && opTag != "" && opMap[opTag] != "" {
+			colums = append(colums, fmt.Sprintf("%s %s $%d", dbTag, opMap[opTag], startIndex+i+1))
 		}
 	}
 	return fmt.Sprintf(Where, strings.Join(colums, " AND "))

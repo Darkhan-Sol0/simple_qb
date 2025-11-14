@@ -11,7 +11,7 @@ type S struct {
 }
 
 type F struct {
-	Num int `db:"num"`
+	Num int `db:"num" op:"eq"`
 }
 
 var table = "users"
@@ -45,6 +45,18 @@ func TestQuerySelectWhere(t *testing.T) {
 
 func TestQueryUpdate(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(Update, table, "num, text", "$1, $2"), fmt.Sprintf(Where, "num = $3"))
+	s, arg := QueryGenerate(Update, table, S{Num: 123, Text: "qwe"}, F{Num: 123})
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error")
+	}
+}
+
+func TestQueryUpdate2(t *testing.T) {
+	type F struct {
+		Num int `db:"num" op:"gt"`
+	}
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(Update, table, "num, text", "$1, $2"), fmt.Sprintf(Where, "num > $3"))
 	s, arg := QueryGenerate(Update, table, S{Num: 123, Text: "qwe"}, F{Num: 123})
 	fmt.Println(s, arg)
 	if s != check {
