@@ -60,7 +60,7 @@ query, args := simple_qb.QueryGenerate(simple_qb.Insert, "users", user, nil)
 ### Генерация запроса SELECT с условием:
 
 ```go
-queryParams := map[string]any{"id": 1}
+queryParams := User{ID: 123}
 query, args := simple_qb.QueryGenerate(simple_qb.Select, "users", User{}, queryParams)
 ```
 
@@ -68,7 +68,7 @@ query, args := simple_qb.QueryGenerate(simple_qb.Select, "users", User{}, queryP
 
 ```go
 userData := User{Name: "Jane"}
-queryParams := map[string]any{"id": 1}
+queryParams := User{ID: 123}
 query, args := simple_qb.QueryGenerate(simple_qb.Update, "users", userData, queryParams)
 ```
 
