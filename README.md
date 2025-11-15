@@ -70,10 +70,10 @@ var opMap = map[string]string{
 	"lte":     "<=",          // меньше или равно
 	"gt":      ">",           // больше
 	"gte":     ">=",          // больше или равно
-	"like":    "LIKE",        // похоже на (для строковых выражений)
-	"in":      "IN",          // входит в перечень
-	"null":    "IS NULL",     // пустое значение
-	"notnull": "IS NOT NULL", // непустое значение
+	"like":    "LIKE",        // похоже на (для строковых выражений) (depricated)
+	"in":      "IN",          // входит в перечень (depricated)
+	"null":    "IS NULL",     // пустое значение (depricated)
+	"notnull": "IS NOT NULL", // непустое значение (depricated)
 }
 ```
 ---

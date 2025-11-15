@@ -49,7 +49,7 @@ func TestQuerySelectWhere(t *testing.T) {
 func TestQueryUpdate(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num = $3"))
 	r := New(table, S{Num: 123, Text: "qwe"}, F{Num: 123})
-	s, arg := r.Update()
+	s, arg, _ := r.Update()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error")
@@ -62,7 +62,7 @@ func TestQueryUpdate2(t *testing.T) {
 	}
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num > $3"))
 	r := New(table, S{Num: 123, Text: "qwe"}, F{Num: 123})
-	s, arg := r.Update()
+	s, arg, _ := r.Update()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error")

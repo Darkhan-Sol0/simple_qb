@@ -4,6 +4,7 @@
 package simple_qb
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -11,12 +12,13 @@ import (
 
 // Insert is a template for constructing INSERT INTO commands.
 // Select is a template for constructing SELECT commands.
-// Where is a template for constructing WHERE clauses.
 // Update is a template for constructing UPDATE commands.
+// Where is a template for constructing WHERE clauses.
 var (
 	insertTemplate = "INSERT INTO %s (%s) VALUES (%s)"
 	selectTemplate = "SELECT %s FROM %s"
 	updateTemplate = "UPDATE %s SET (%s) = (%s)"
+	deleteTemplate = "DELETE FROM %s"
 	whereTemplate  = "WHERE %s"
 )
 
@@ -53,7 +55,8 @@ type (
 	QBilder interface {
 		Select() (query string, args []any)
 		Insert() (query string, args []any)
-		Update() (query string, args []any)
+		Update() (query string, args []any, err error)
+		Delete() (query string, args []any, err error)
 	}
 )
 
@@ -84,7 +87,10 @@ func (q *qBilder) Insert() (query string, args []any) {
 	return query, args
 }
 
-func (q *qBilder) Update() (query string, args []any) {
+func (q *qBilder) Update() (query string, args []any, err error) {
+	if q.params == nil {
+		return "", nil, errors.New("cannot perform UPDATE without WHERE condition")
+	}
 	colums := getColums(q.data)
 	placeholders := getPlaceholders(len(colums))
 	args = getArguments(q.data)
@@ -94,7 +100,20 @@ func (q *qBilder) Update() (query string, args []any) {
 		args = append(args, getArguments(q.params)...)
 		query = fmt.Sprintf("%s %s", query, where)
 	}
-	return query, args
+	return query, args, nil
+}
+
+func (q *qBilder) Delete() (query string, args []any, err error) {
+	if q.params == nil {
+		return "", nil, errors.New("cannot perform DELETE without WHERE condition")
+	}
+	query = fmt.Sprintf(deleteTemplate, q.table)
+	if q.params != nil {
+		where := getWhere(q.params, 0)
+		args = append(args, getArguments(q.params)...)
+		query = fmt.Sprintf("%s %s", query, where)
+	}
+	return query, args, nil
 }
 
 // getArguments extracts arguments from structured data, considering special tags (db).
