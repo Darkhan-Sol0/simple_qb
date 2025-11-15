@@ -17,8 +17,9 @@ type F struct {
 var table = "users"
 
 func TestQueryInsert(t *testing.T) {
-	check := fmt.Sprintf(Insert, table, "num, text", "$1, $2")
-	s, arg := QueryGenerate(Insert, table, S{Num: 123, Text: "qwe"}, nil)
+	check := fmt.Sprintf(insertTemplate, table, "num, text", "$1, $2")
+	r := New(table, S{Num: 123, Text: "qwe"}, nil)
+	s, arg := r.Insert()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error")
@@ -26,8 +27,9 @@ func TestQueryInsert(t *testing.T) {
 }
 
 func TestQuerySelect(t *testing.T) {
-	check := fmt.Sprintf(Select, "num, text", table)
-	s, arg := QueryGenerate(Select, table, S{}, nil)
+	check := fmt.Sprintf(selectTemplate, "num, text", table)
+	r := New(table, S{}, nil)
+	s, arg := r.Select()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error")
@@ -35,8 +37,9 @@ func TestQuerySelect(t *testing.T) {
 }
 
 func TestQuerySelectWhere(t *testing.T) {
-	check := fmt.Sprintf("%s %s", fmt.Sprintf(Select, "num, text", table), fmt.Sprintf(Where, "num = $1"))
-	s, arg := QueryGenerate(Select, table, S{}, F{Num: 123})
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), fmt.Sprintf(whereTemplate, "num = $1"))
+	r := New(table, S{}, F{Num: 123})
+	s, arg := r.Select()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error")
@@ -44,8 +47,9 @@ func TestQuerySelectWhere(t *testing.T) {
 }
 
 func TestQueryUpdate(t *testing.T) {
-	check := fmt.Sprintf("%s %s", fmt.Sprintf(Update, table, "num, text", "$1, $2"), fmt.Sprintf(Where, "num = $3"))
-	s, arg := QueryGenerate(Update, table, S{Num: 123, Text: "qwe"}, F{Num: 123})
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num = $3"))
+	r := New(table, S{Num: 123, Text: "qwe"}, F{Num: 123})
+	s, arg := r.Update()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error")
@@ -56,8 +60,9 @@ func TestQueryUpdate2(t *testing.T) {
 	type F struct {
 		Num int `db:"num" op:"gt"`
 	}
-	check := fmt.Sprintf("%s %s", fmt.Sprintf(Update, table, "num, text", "$1, $2"), fmt.Sprintf(Where, "num > $3"))
-	s, arg := QueryGenerate(Update, table, S{Num: 123, Text: "qwe"}, F{Num: 123})
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num > $3"))
+	r := New(table, S{Num: 123, Text: "qwe"}, F{Num: 123})
+	s, arg := r.Update()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error")

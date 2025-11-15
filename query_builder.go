@@ -14,10 +14,10 @@ import (
 // Where is a template for constructing WHERE clauses.
 // Update is a template for constructing UPDATE commands.
 var (
-	Insert = "INSERT INTO %s (%s) VALUES (%s)"
-	Select = "SELECT %s FROM %s"
-	Where  = "WHERE %s"
-	Update = "UPDATE %s SET (%s) = (%s)"
+	insertTemplate = "INSERT INTO %s (%s) VALUES (%s)"
+	selectTemplate = "SELECT %s FROM %s"
+	updateTemplate = "UPDATE %s SET (%s) = (%s)"
+	whereTemplate  = "WHERE %s"
 )
 
 // Tag identifies column names within structures.
@@ -31,74 +31,70 @@ const (
 
 // Operation mappings convert internal representations into corresponding SQL operators.
 var opMap = map[string]string{
-	"eq":      "=",           // равно
-	"neq":     "<>",          // неравно
-	"lt":      "<",           // меньше
-	"lte":     "<=",          // меньше или равно
-	"gt":      ">",           // больше
-	"gte":     ">=",          // больше или равно
-	"like":    "LIKE",        // похоже на (для строковых выражений)
-	"in":      "IN",          // входит в перечень
-	"null":    "IS NULL",     // пустое значение
-	"notnull": "IS NOT NULL", // непустое значение
+	"eq":  "=",  // равно
+	"neq": "<>", // неравно
+	"lt":  "<",  // меньше
+	"lte": "<=", // меньше или равно
+	"gt":  ">",  // больше
+	"gte": ">=", // больше или равно
+	// "like":    "LIKE",        // похоже на (для строковых выражений)
+	// "in":      "IN",          // входит в перечень
+	// "null":    "IS NULL",     // пустое значение
+	// "notnull": "IS NOT NULL", // непустое значение
 }
 
-// QueryGenerate creates an SQL query from given parameters.
-// Arguments:
-//
-//	qtype: Type of query being constructed (INSERT, SELECT, UPDATE).
-//	table: Target database table.
-//	data: Structured data for insertion or update.
-//	params: Filtering parameters for WHERE clause.
-//
-// Returns:
-//
-//	Formatted SQL query and array of arguments for execution.
-func QueryGenerate(qtype, table string, data, params any) (query string, args []any) {
-	// Logic constructs SQL query by analyzing structure fields and forming appropriate sections.
-	var colums []string
-	var placeholders []string
-	switch qtype {
-	case Insert:
-		colums = getColums(data)
-		placeholders = getPlaceholders(len(colums))
-		args = getArguments(data)
-		query = queryBuild(qtype, table, colums, placeholders)
-	case Select:
-		colums = getColums(data)
-		query = queryBuild(qtype, table, colums, placeholders)
-		if params != nil {
-			where := getWhere(params, 0)
-			args = append(args, getArguments(params)...)
-			query = fmt.Sprintf("%s %s", query, where)
-		}
-	case Update:
-		colums = getColums(data)
-		placeholders = getPlaceholders(len(colums))
-		args = getArguments(data)
-		query = queryBuild(qtype, table, colums, placeholders)
-		if params != nil {
-			where := getWhere(params, len(colums))
-			args = append(args, getArguments(params)...)
-			query = fmt.Sprintf("%s %s", query, where)
-		}
-	default:
+type (
+	qBilder struct {
+		table  string
+		data   any
+		params any
+	}
+
+	QBilder interface {
+		Select() (query string, args []any)
+		Insert() (query string, args []any)
+		Update() (query string, args []any)
+	}
+)
+
+func New(table string, data, params any) QBilder {
+	return &qBilder{
+		table:  table,
+		data:   data,
+		params: params,
+	}
+}
+
+func (q *qBilder) Select() (query string, args []any) {
+	colums := getColums(q.data)
+	query = fmt.Sprintf(selectTemplate, strings.Join(colums, ", "), q.table)
+	if q.params != nil {
+		where := getWhere(q.params, 0)
+		args = append(args, getArguments(q.params)...)
+		query = fmt.Sprintf("%s %s", query, where)
 	}
 	return query, args
 }
 
-// queryBuild joins base elements of an SQL query (template, table, columns, placeholders).
-// Argument qtype determines the query type.
-func queryBuild(qtype, table string, colums, placeholders []string) (query string) {
-	switch qtype {
-	case Insert:
-		query = fmt.Sprintf(Insert, table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
-	case Select:
-		query = fmt.Sprintf(Select, strings.Join(colums, ", "), table)
-	case Update:
-		query = fmt.Sprintf(Update, table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
+func (q *qBilder) Insert() (query string, args []any) {
+	colums := getColums(q.data)
+	placeholders := getPlaceholders(len(colums))
+	args = getArguments(q.data)
+	query = fmt.Sprintf(insertTemplate, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
+	return query, args
+}
+
+func (q *qBilder) Update() (query string, args []any) {
+	colums := getColums(q.data)
+	placeholders := getPlaceholders(len(colums))
+	args = getArguments(q.data)
+	query = fmt.Sprintf(updateTemplate, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
+	if q.params != nil {
+		where := getWhere(q.params, len(colums))
+		args = append(args, getArguments(q.params)...)
+		query = fmt.Sprintf("%s %s", query, where)
 	}
-	return
+	return query, args
 }
 
 // getArguments extracts arguments from structured data, considering special tags (db).
@@ -154,5 +150,5 @@ func getWhere(data any, startIndex int) (query string) {
 			colums = append(colums, fmt.Sprintf("%s %s $%d", dbTag, opMap[opTag], startIndex+i+1))
 		}
 	}
-	return fmt.Sprintf(Where, strings.Join(colums, " AND "))
+	return fmt.Sprintf(whereTemplate, strings.Join(colums, " AND "))
 }
