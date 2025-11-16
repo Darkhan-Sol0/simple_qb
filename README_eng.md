@@ -1,4 +1,4 @@
-[Russian Version](readme.md)
+[Russian Version](README.md)
 ---
 
 # Simple QB: Easy SQL Generator for PostgreSQL
