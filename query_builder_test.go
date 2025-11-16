@@ -68,3 +68,15 @@ func TestQueryUpdate2(t *testing.T) {
 		t.Errorf("error")
 	}
 }
+
+func TestQueryUpdate3(t *testing.T) {
+	type F struct {
+	}
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, ""))
+	r := New(table, S{Num: 123, Text: "qwe"}, F{})
+	s, arg, _ := r.Update()
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error")
+	}
+}

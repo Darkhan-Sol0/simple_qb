@@ -80,26 +80,36 @@ var opMap = map[string]string{
 
 ## Генерация запросов
 
-### Генерация запроса INSERT:
+### Конструктор New:
 
 ```go
 user := User{Name: "John"}
-query, args := simple_qb.QueryGenerate(simple_qb.Insert, "users", user, nil)
+queryParams := User{ID: 123}
+myStruct := simple_qb.New("users", user, queryParams)
+```
+
+### Генерация запроса INSERT:
+
+```go
+query, args := myStruct.Insert()
 ```
 
 ### Генерация запроса SELECT с условием:
 
 ```go
-queryParams := User{ID: 123}
-query, args := simple_qb.QueryGenerate(simple_qb.Select, "users", User{}, queryParams)
+query, args := myStruct.Select()
 ```
 
 ### Генерация запроса UPDATE:
 
 ```go
-userData := User{Name: "Jane"}
-queryParams := User{ID: 123}
-query, args := simple_qb.QueryGenerate(simple_qb.Update, "users", userData, queryParams)
+query, args, err := myStruct.Update()
+```
+
+### Генерация запроса Delete:
+
+```go
+query, args, err := myStruct.Delete()
 ```
 
 ---
@@ -108,12 +118,18 @@ query, args := simple_qb.QueryGenerate(simple_qb.Update, "users", userData, quer
 
 Основные функции пакета:
 
-- **QueryGenerate(queryType, tableName, data, params)**: Генерация SQL-запроса.
-  - `queryType`: Тип запроса (например, `simple_qb.Insert`, `simple_qb.Select`, `simple_qb.Update`).
+- **New(tableName, data, params)**: Генерация SQL-запроса.
   - `tableName`: Имя таблицы.
   - `data`: Структура данных для запроса.
   - `params`: Параметры для условия WHERE (может быть картой).
 
+- **Insert()**: Генерация SQL-запроса Inserr.
+
+- **Select()**: Генерация SQL-запроса Select.
+
+- **Update()**: Генерация SQL-запроса Update.
+
+- **Delete()**: Генерация SQL-запроса Delete.
 ---
 
 ## Примеры запросов
@@ -126,7 +142,7 @@ SELECT num, text FROM users
 SELECT num, text FROM users WHERE num = $1
 UPDATE users SET (num, text) = ($1, $2) WHERE num = $3
 UPDATE users SET (num, text) = ($1, $2) WHERE num >= $3
-
+DELETE FROM users WHERE num = $1
 ```
 ---
 
