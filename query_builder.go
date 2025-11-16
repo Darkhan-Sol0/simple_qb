@@ -17,7 +17,7 @@ import (
 var (
 	insertTemplate = "INSERT INTO %s (%s) VALUES (%s)"
 	selectTemplate = "SELECT %s FROM %s"
-	updateTemplate = "UPDATE %s SET (%s) = (%s)"
+	updateTemplate = "UPDATE %s SET (%s) = ROW(%s)"
 	deleteTemplate = "DELETE FROM %s"
 	whereTemplate  = "WHERE %s"
 )
