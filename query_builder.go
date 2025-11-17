@@ -29,27 +29,35 @@ const (
 	op  = "op"
 )
 
+type Node struct {
+	Operator string
+	Value    any
+}
+
+type FilterNode = map[string]Node
+
 // пока такие теги, может посже изменить
 
 // Operation mappings convert internal representations into corresponding SQL operators.
 var opMap = map[string]string{
-	"eq":  "=",  // равно
-	"neq": "<>", // неравно
-	"lt":  "<",  // меньше
-	"lte": "<=", // меньше или равно
-	"gt":  ">",  // больше
-	"gte": ">=", // больше или равно
-	// "like":    "LIKE",        // похоже на (для строковых выражений)
-	// "in":      "IN",          // входит в перечень
-	// "null":    "IS NULL",     // пустое значение
-	// "notnull": "IS NOT NULL", // непустое значение
+	"eq":      "=",           // равно
+	"neq":     "<>",          // неравно
+	"lt":      "<",           // меньше
+	"lte":     "<=",          // меньше или равно
+	"gt":      ">",           // больше
+	"gte":     ">=",          // больше или равно
+	"like":    "LIKE",        // похоже на (для строковых выражений)
+	"in":      "IN",          // входит в перечень
+	"null":    "IS NULL",     // пустое значение
+	"notnull": "IS NOT NULL", // непустое значение
 }
 
 type (
 	qBilder struct {
-		table  string
-		data   any
-		params any
+		table        string
+		data         any
+		params       any
+		paramsLatest FilterNode
 	}
 
 	QBilder interface {
@@ -57,14 +65,17 @@ type (
 		Insert() (query string, args []any)
 		Update() (query string, args []any, err error)
 		Delete() (query string, args []any, err error)
+
+		SelectLatest() (query string, args []any)
 	}
 )
 
-func New(table string, data, params any) QBilder {
+func New(table string, data, params any, pL FilterNode) QBilder {
 	return &qBilder{
-		table:  table,
-		data:   data,
-		params: params,
+		table:        table,
+		data:         data,
+		params:       params,
+		paramsLatest: pL,
 	}
 }
 
@@ -124,7 +135,7 @@ func getArguments(data any) (args []any) {
 	for i := range t.NumField() {
 		dbTag := t.Field(i).Tag.Get(tag)
 		val := v.Field(i)
-		if dbTag != "" && dbTag != "-" {
+		if dbTag != "" && dbTag != "-" && val != reflect.Zero(val.Type()) {
 			args = append(args, val.Interface())
 		}
 	}
@@ -166,8 +177,55 @@ func getWhere(data any, startIndex int) (query string) {
 		dbTag := t.Field(i).Tag.Get(tag)
 		opTag := t.Field(i).Tag.Get(op)
 		if dbTag != "" && dbTag != "-" && opTag != "" && opMap[opTag] != "" {
-			colums = append(colums, fmt.Sprintf("%s %s $%d", dbTag, opMap[opTag], startIndex+i+1))
+			switch opTag {
+			case "in":
+				colums = append(colums, fmt.Sprintf("%s %s ($%d)", dbTag, opMap[opTag], startIndex+i+1))
+			case "null", "notnull":
+				colums = append(colums, fmt.Sprintf("%s %s", dbTag, opMap[opTag]))
+			default:
+				colums = append(colums, fmt.Sprintf("%s %s $%d", dbTag, opMap[opTag], startIndex+i+1))
+			}
 		}
 	}
+	if len(colums) == 0 {
+		return ""
+	}
 	return fmt.Sprintf(whereTemplate, strings.Join(colums, " AND "))
+}
+
+func getWhereLatest(data FilterNode, startIndex int) (query string, args []any) {
+	var colums []string
+	count := 1
+	for i, v := range data {
+		tag := v.Operator
+		val := v.Value
+		if tag != "" && opMap[tag] != "" {
+			switch tag {
+			case "in":
+				colums = append(colums, fmt.Sprintf("%s %s ($%d)", i, opMap[tag], startIndex+count))
+				args = append(args, val)
+			case "null", "notnull":
+				colums = append(colums, fmt.Sprintf("%s %s", i, opMap[tag]))
+			default:
+				colums = append(colums, fmt.Sprintf("%s %s $%d", i, opMap[tag], startIndex+count))
+				args = append(args, val)
+			}
+			count++
+		}
+	}
+	if len(colums) == 0 {
+		return "", nil
+	}
+	return fmt.Sprintf(whereTemplate, strings.Join(colums, " AND ")), args
+}
+
+func (q *qBilder) SelectLatest() (query string, args []any) {
+	colums := getColums(q.data)
+	query = fmt.Sprintf(selectTemplate, strings.Join(colums, ", "), q.table)
+	if q.paramsLatest != nil {
+		where, ar := getWhereLatest(q.paramsLatest, 0)
+		args = append(args, ar...)
+		query = fmt.Sprintf("%s %s", query, where)
+	}
+	return query, args
 }
