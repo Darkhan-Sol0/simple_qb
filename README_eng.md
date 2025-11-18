@@ -51,15 +51,13 @@ type User struct {
 | `db:"field_name"`| Database field name   |
 
 ```go
-type User struct {
-    ID   int    `db:"id" op:"eq"`
-    Name string `db:"name" op:"gt"`
+type Node struct {
+	Operator string
+	Value    any
 }
-```
 
-| Field              | Purpose                     |
-|--------------------|-----------------------------|
-| `op:"operator_name"`| Filter operation by value   |
+type FilterNode = map[string]*Node
+```
 
 ```go
 var opMap = map[string]string{
@@ -69,10 +67,10 @@ var opMap = map[string]string{
 	"lte":     "<=",          // less than or equal
 	"gt":      ">",           // greater than
 	"gte":     ">=",          // greater than or equal
-	"like":    "LIKE",        // like (for string expressions) (deprecated)
-	"in":      "IN",          // in list (deprecated)
-	"null":    "IS NULL",     // null value (deprecated)
-	"notnull": "IS NOT NULL", // non-null value (deprecated)
+	"like":    "LIKE",        // like (for string expressions) 
+	"in":      "IN",          // in list 
+	"null":    "IS NULL",     // null value 
+	"notnull": "IS NOT NULL", // non-null value 
 }
 ```
 ---
@@ -83,7 +81,7 @@ var opMap = map[string]string{
 
 ```go
 user := User{Name: "John"}
-queryParams := User{ID: 123}
+queryParams := NewFilter("id", "eq", 123)
 myStruct := simple_qb.New("users", user, queryParams)
 ```
 
@@ -129,6 +127,10 @@ Main functions provided by the package:
 - **Update()**: Generates an Update SQL query.
 
 - **Delete()**: Generates a Delete SQL query.
+
+- **NewFilter(tagName, operator string, value any)**: Generates a map for WHERE SQL query.
+
+- **AddFilter(tagName, operator string, value any)**: Add in map for WHERE SQL query.
 ---
 
 ## Query Examples

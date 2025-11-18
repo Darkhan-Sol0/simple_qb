@@ -26,7 +26,6 @@ var (
 // Op specifies the operation applied to data in WHERE conditions.
 const (
 	tag = "db"
-	op  = "op"
 )
 
 type Node struct {
@@ -34,7 +33,7 @@ type Node struct {
 	Value    any
 }
 
-type FilterNode = map[string]Node
+type FilterNode = map[string]*Node
 
 // пока такие теги, может посже изменить
 
@@ -54,10 +53,9 @@ var opMap = map[string]string{
 
 type (
 	qBilder struct {
-		table        string
-		data         any
-		params       any
-		paramsLatest FilterNode
+		table  string
+		data   any
+		params FilterNode
 	}
 
 	QBilder interface {
@@ -66,16 +64,30 @@ type (
 		Update() (query string, args []any, err error)
 		Delete() (query string, args []any, err error)
 
-		SelectLatest() (query string, args []any)
+		AddFilter(tagName, operator string, value any)
 	}
 )
 
-func New(table string, data, params any, pL FilterNode) QBilder {
+func New(table string, data any, params FilterNode) QBilder {
 	return &qBilder{
-		table:        table,
-		data:         data,
-		params:       params,
-		paramsLatest: pL,
+		table:  table,
+		data:   data,
+		params: params,
+	}
+}
+
+func (q *qBilder) AddFilter(tagName, operator string, value any) {
+	q.params[tagName] = newNode(operator, value)
+}
+
+func NewFillter(tagName, operator string, value any) FilterNode {
+	return map[string]*Node{}
+}
+
+func newNode(operator string, value any) *Node {
+	return &Node{
+		Operator: operator,
+		Value:    value,
 	}
 }
 
@@ -83,8 +95,8 @@ func (q *qBilder) Select() (query string, args []any) {
 	colums := getColums(q.data)
 	query = fmt.Sprintf(selectTemplate, strings.Join(colums, ", "), q.table)
 	if q.params != nil {
-		where := getWhere(q.params, 0)
-		args = append(args, getArguments(q.params)...)
+		where, ar := getWhere(q.params, 0)
+		args = append(args, ar...)
 		query = fmt.Sprintf("%s %s", query, where)
 	}
 	return query, args
@@ -107,8 +119,8 @@ func (q *qBilder) Update() (query string, args []any, err error) {
 	args = getArguments(q.data)
 	query = fmt.Sprintf(updateTemplate, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
 	if q.params != nil {
-		where := getWhere(q.params, len(colums))
-		args = append(args, getArguments(q.params)...)
+		where, ar := getWhere(q.params, len(colums))
+		args = append(args, ar...)
 		query = fmt.Sprintf("%s %s", query, where)
 	}
 	return query, args, nil
@@ -120,8 +132,8 @@ func (q *qBilder) Delete() (query string, args []any, err error) {
 	}
 	query = fmt.Sprintf(deleteTemplate, q.table)
 	if q.params != nil {
-		where := getWhere(q.params, 0)
-		args = append(args, getArguments(q.params)...)
+		where, ar := getWhere(q.params, 0)
+		args = append(args, ar...)
 		query = fmt.Sprintf("%s %s", query, where)
 	}
 	return query, args, nil
@@ -169,31 +181,8 @@ func getPlaceholders(count int) (placeholders []string) {
 
 // getWhere builds WHERE condition string based on structured data and special tags.
 // Returns formatted WHERE clause combining columns and operators via AND.
-func getWhere(data any, startIndex int) (query string) {
-	var colums []string
-	v := reflect.ValueOf(data)
-	t := v.Type()
-	for i := range t.NumField() {
-		dbTag := t.Field(i).Tag.Get(tag)
-		opTag := t.Field(i).Tag.Get(op)
-		if dbTag != "" && dbTag != "-" && opTag != "" && opMap[opTag] != "" {
-			switch opTag {
-			case "in":
-				colums = append(colums, fmt.Sprintf("%s %s ($%d)", dbTag, opMap[opTag], startIndex+i+1))
-			case "null", "notnull":
-				colums = append(colums, fmt.Sprintf("%s %s", dbTag, opMap[opTag]))
-			default:
-				colums = append(colums, fmt.Sprintf("%s %s $%d", dbTag, opMap[opTag], startIndex+i+1))
-			}
-		}
-	}
-	if len(colums) == 0 {
-		return ""
-	}
-	return fmt.Sprintf(whereTemplate, strings.Join(colums, " AND "))
-}
 
-func getWhereLatest(data FilterNode, startIndex int) (query string, args []any) {
+func getWhere(data FilterNode, startIndex int) (query string, args []any) {
 	var colums []string
 	count := 1
 	for i, v := range data {
@@ -217,15 +206,4 @@ func getWhereLatest(data FilterNode, startIndex int) (query string, args []any) 
 		return "", nil
 	}
 	return fmt.Sprintf(whereTemplate, strings.Join(colums, " AND ")), args
-}
-
-func (q *qBilder) SelectLatest() (query string, args []any) {
-	colums := getColums(q.data)
-	query = fmt.Sprintf(selectTemplate, strings.Join(colums, ", "), q.table)
-	if q.paramsLatest != nil {
-		where, ar := getWhereLatest(q.paramsLatest, 0)
-		args = append(args, ar...)
-		query = fmt.Sprintf("%s %s", query, where)
-	}
-	return query, args
 }

@@ -52,15 +52,14 @@ type User struct {
 
 
 ```go
-type User struct {
-    ID   int    `db:"id" op:"eq"`
-    Name string `db:"name" op:"gt"`
+type Node struct {
+	Operator string
+	Value    any
+}
+
+type FilterNode = map[string]*Node
 }
 ```
-
-| Поле          | Назначение                  |
-|-------------------|----------------------------|
-| `op:"имя_оператора"`   | для операции фильтрации по значению      |
 
 ```go
 var opMap = map[string]string{
@@ -70,10 +69,10 @@ var opMap = map[string]string{
 	"lte":     "<=",          // меньше или равно
 	"gt":      ">",           // больше
 	"gte":     ">=",          // больше или равно
-	"like":    "LIKE",        // похоже на (для строковых выражений) (depricated)
-	"in":      "IN",          // входит в перечень (depricated)
-	"null":    "IS NULL",     // пустое значение (depricated)
-	"notnull": "IS NOT NULL", // непустое значение (depricated)
+	"like":    "LIKE",        // похоже на (для строковых выражений) 
+	"in":      "IN",          // входит в перечень 
+	"null":    "IS NULL",     // пустое значение
+	"notnull": "IS NOT NULL", // непустое значение 
 }
 ```
 ---
@@ -84,7 +83,7 @@ var opMap = map[string]string{
 
 ```go
 user := User{Name: "John"}
-queryParams := User{ID: 123}
+queryParams := NewFilter("id", "eq", 123)
 myStruct := simple_qb.New("users", user, queryParams)
 ```
 
@@ -130,6 +129,10 @@ query, args, err := myStruct.Delete()
 - **Update()**: Генерация SQL-запроса Update.
 
 - **Delete()**: Генерация SQL-запроса Delete.
+
+- **NewFilter(tagName, operator string, value any)**: Генерация мапы для условия фильтрации.
+
+- **AddFilter(tagName, operator string, value any)**: Добавляет условия фильтрации в мапу.
 ---
 
 ## Примеры запросов
