@@ -42,6 +42,17 @@ func TestQuerySelectWhere(t *testing.T) {
 	}
 }
 
+func TestQuerySelectWhere1(t *testing.T) {
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), fmt.Sprintf(whereTemplate, "num = $1"))
+	filter := NewFillter("num", "eq", 123)
+	r := New(table, S{}, filter)
+	s, arg := r.Select()
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error")
+	}
+}
+
 func TestQueryUpdate(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num = $3"))
 	r := New(table, S{Num: 123, Text: "qwe"}, FilterNode{"num": &Node{Operator: "eq", Value: 123}})

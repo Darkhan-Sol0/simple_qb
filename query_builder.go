@@ -81,7 +81,9 @@ func (q *qBilder) AddFilter(tagName, operator string, value any) {
 }
 
 func NewFillter(tagName, operator string, value any) FilterNode {
-	return map[string]*Node{}
+	return map[string]*Node{
+		tagName: newNode(operator, value),
+	}
 }
 
 func newNode(operator string, value any) *Node {
