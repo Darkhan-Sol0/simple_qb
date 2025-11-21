@@ -34,7 +34,8 @@ func TestQuerySelect(t *testing.T) {
 
 func TestQuerySelectWhere(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), fmt.Sprintf(whereTemplate, "num = $1"))
-	r := New(table, S{}, FilterNode{"num": &Node{Operator: "eq", Value: 123}})
+	filter := NewFillter(NewNode("num", "eq", 123))
+	r := New(table, S{}, filter)
 	s, arg := r.Select()
 	fmt.Println(s, arg)
 	if s != check {
@@ -44,7 +45,7 @@ func TestQuerySelectWhere(t *testing.T) {
 
 func TestQuerySelectWhere1(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), fmt.Sprintf(whereTemplate, "num = $1"))
-	filter := NewFillter("num", "eq", 123)
+	filter := NewFillter(NewNode("num", "eq", 123))
 	r := New(table, S{}, filter)
 	s, arg := r.Select()
 	fmt.Println(s, arg)
@@ -55,7 +56,8 @@ func TestQuerySelectWhere1(t *testing.T) {
 
 func TestQueryUpdate(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num = $3"))
-	r := New(table, S{Num: 123, Text: "qwe"}, FilterNode{"num": &Node{Operator: "eq", Value: 123}})
+	filter := NewFillter(NewNode("num", "eq", 123))
+	r := New(table, S{Num: 123, Text: "qwe"}, filter)
 	s, arg, _ := r.Update()
 	fmt.Println(s, arg)
 	if s != check {
@@ -65,7 +67,8 @@ func TestQueryUpdate(t *testing.T) {
 
 func TestQueryUpdate2(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num > $3"))
-	r := New(table, S{Num: 123, Text: "qwe"}, FilterNode{"num": &Node{Operator: "gt", Value: 123}})
+	filter := NewFillter(NewNode("num", "gt", 123))
+	r := New(table, S{Num: 123, Text: "qwe"}, filter)
 	s, arg, _ := r.Update()
 	fmt.Println(s, arg)
 	if s != check {
@@ -85,7 +88,8 @@ func TestQueryUpdate3(t *testing.T) {
 
 func TestQueryUpdate4(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num IN ($3)"))
-	r := New(table, S{Num: 123, Text: "qwe"}, FilterNode{"num": &Node{Operator: "in", Value: []int{1, 2, 3}}})
+	filter := NewFillter(NewNode("num", "in", []int{1, 2, 3}))
+	r := New(table, S{Num: 123, Text: "qwe"}, filter)
 	s, arg, _ := r.Update()
 	fmt.Println(s, arg)
 	if s != check {
@@ -95,7 +99,8 @@ func TestQueryUpdate4(t *testing.T) {
 
 func TestQueryUpdate5(t *testing.T) {
 	check := fmt.Sprintf("%s %s", fmt.Sprintf(updateTemplate, table, "num, text", "$1, $2"), fmt.Sprintf(whereTemplate, "num IS NULL AND text IS NOT NULL"))
-	r := New(table, S{Num: 123, Text: "qwe"}, FilterNode{"num": &Node{Operator: "null", Value: 123}, "text": &Node{Operator: "notnull"}})
+	filter := NewFillter(NewNode("num", "null", 123), NewNode("text", "notnull", 123))
+	r := New(table, S{Num: 123, Text: "qwe"}, filter)
 	s, arg, _ := r.Update()
 	fmt.Println(s, arg)
 	if s != check {
