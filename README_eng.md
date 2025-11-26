@@ -56,7 +56,7 @@ type Node struct {
 	Value    any
 }
 
-type FilterNode = map[string]*Node
+type FilterNode = []*Node
 ```
 
 ```go
@@ -81,7 +81,7 @@ var opMap = map[string]string{
 
 ```go
 user := User{Name: "John"}
-queryParams := NewFilter("id", "eq", 123)
+queryParams := NewFilter(NewNode("id", "eq", 123)...)
 myStruct := simple_qb.New("users", user, queryParams)
 ```
 

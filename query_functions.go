@@ -3,7 +3,6 @@ package simple_qb
 import (
 	"fmt"
 	"reflect"
-	"strings"
 )
 
 // getArguments extracts arguments from structured data, considering special tags (db).
@@ -14,7 +13,7 @@ func getArguments(data any) (args []any) {
 	for i := range t.NumField() {
 		dbTag := t.Field(i).Tag.Get(tag)
 		val := v.Field(i)
-		if dbTag != "" && dbTag != "-" && val != reflect.Zero(val.Type()) {
+		if dbTag != "" && dbTag != "-" && !val.IsZero() {
 			args = append(args, val.Interface())
 		}
 	}
@@ -72,5 +71,12 @@ func getWhere(data FilterNode, startIndex int) (query string, args []any) {
 	if len(colums) == 0 {
 		return "", nil
 	}
-	return fmt.Sprintf(whereTemplate, strings.Join(colums, " AND ")), args
+
+	res := colums[0]
+
+	for i := 1; i < len(colums); i++ {
+		res = fmt.Sprintf("%s %s %s", res, data[i].Logic, colums[i])
+	}
+
+	return fmt.Sprintf(whereTemplate, res), args
 }

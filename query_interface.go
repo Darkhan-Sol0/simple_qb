@@ -34,11 +34,12 @@ func AddFillter(nodes FilterNode, node ...*Node) FilterNode {
 	return nodes
 }
 
-func NewNode(tag, operator string, value any) *Node {
+func NewNode(tag, operator, logic string, value any) *Node {
 	return &Node{
 		Tag:      tag,
 		Operator: operator,
 		Value:    value,
+		Logic:    logic,
 	}
 }
 

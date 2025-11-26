@@ -28,6 +28,7 @@ type Node struct {
 	Tag      string
 	Operator string
 	Value    any
+	Logic    string
 }
 
 type FilterNode = []*Node
