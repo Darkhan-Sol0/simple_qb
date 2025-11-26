@@ -24,22 +24,31 @@ func New(table string, data any, params FilterNode) QBilder {
 	}
 }
 
-func NewFillter(node ...*Node) (nodes FilterNode) {
+func NewFilter(node ...*Node) (nodes FilterNode) {
 	nodes = append(nodes, node...)
 	return nodes
 }
 
-func AddFillter(nodes FilterNode, node ...*Node) FilterNode {
+func AddFilter(nodes FilterNode, node ...*Node) FilterNode {
 	nodes = append(nodes, node...)
 	return nodes
 }
 
-func NewNode(tag, operator, logic string, value any) *Node {
+func NewNode(tag, operator string, value any) *Node {
 	return &Node{
 		Tag:      tag,
 		Operator: operator,
 		Value:    value,
-		Logic:    logic,
+		Logic:    "AND",
+	}
+}
+
+func NewNodeOr(tag, operator string, value any) *Node {
+	return &Node{
+		Tag:      tag,
+		Operator: operator,
+		Value:    value,
+		Logic:    "OR",
 	}
 }
 

@@ -3,6 +3,7 @@ package simple_qb
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // getArguments extracts arguments from structured data, considering special tags (db).
@@ -49,34 +50,57 @@ func getPlaceholders(count int) (placeholders []string) {
 // Returns formatted WHERE clause combining columns and operators via AND.
 
 func getWhere(data FilterNode, startIndex int) (query string, args []any) {
+	if len(data) == 0 {
+		return "", nil
+	}
 	var colums []string
 	count := 1
-	for _, v := range data {
+	for i, v := range data {
+		logic := v.Logic
 		tag := v.Operator
 		val := v.Value
 		if tag != "" && opMap[tag] != "" {
 			switch tag {
 			case "in":
-				colums = append(colums, fmt.Sprintf("%s %s ($%d)", v.Tag, opMap[tag], startIndex+count))
+				text := fmt.Sprintf("%s %s ($%d)", v.Tag, opMap[tag], startIndex+count)
+				if i > 0 {
+					if logic == "" {
+						text = fmt.Sprintf("%s %s", "AND", text)
+					} else {
+						text = fmt.Sprintf("%s %s", logic, text)
+					}
+				}
+				colums = append(colums, text)
 				args = append(args, val)
+				count++
 			case "null", "notnull":
-				colums = append(colums, fmt.Sprintf("%s %s", v.Tag, opMap[tag]))
+				text := fmt.Sprintf("%s %s", v.Tag, opMap[tag])
+				if i > 0 {
+					if logic == "" {
+						text = fmt.Sprintf("%s %s", "AND", text)
+					} else {
+						text = fmt.Sprintf("%s %s", logic, text)
+					}
+				}
+				colums = append(colums, text)
 			default:
-				colums = append(colums, fmt.Sprintf("%s %s $%d", v.Tag, opMap[tag], startIndex+count))
+				text := fmt.Sprintf("%s %s $%d", v.Tag, opMap[tag], startIndex+count)
+				if i > 0 {
+					if logic == "" {
+						text = fmt.Sprintf("%s %s", "AND", text)
+					} else {
+						text = fmt.Sprintf("%s %s", logic, text)
+					}
+				}
+				colums = append(colums, text)
 				args = append(args, val)
+				count++
 			}
-			count++
 		}
 	}
 	if len(colums) == 0 {
 		return "", nil
 	}
 
-	res := colums[0]
-
-	for i := 1; i < len(colums); i++ {
-		res = fmt.Sprintf("%s %s %s", res, data[i].Logic, colums[i])
-	}
-
-	return fmt.Sprintf(whereTemplate, res), args
+	return fmt.Sprintf(whereTemplate, strings.Join(colums, " ")), args
 }
