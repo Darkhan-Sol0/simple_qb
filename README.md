@@ -138,6 +138,10 @@ query, args, err := myStruct.Delete()
 - **NewParam(tagName, operator string, value any)**: Генерация мапы для условия фильтрации.
 
 - **AddParam(tagName, operator string, value any)**: Добавляет условия фильтрации в мапу.
+
+- **Limit(query string, limit, offset int)**: Вспомогательная функция для добавления LIMIT и OFFSET.
+
+- **OrderBy(query string, column, order string)**: Вспомогательная функция для добавления ORDER BY и ASC/DESC. Default ASC
 ---
 
 ## Примеры запросов
