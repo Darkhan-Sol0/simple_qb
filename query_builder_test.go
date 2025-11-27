@@ -129,3 +129,59 @@ func TestQueryUpdate7(t *testing.T) {
 		t.Errorf("error: %s || %s", s, check)
 	}
 }
+
+func TestQuerySelect1(t *testing.T) {
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), "ORDER BY num ASC")
+	r := New(table, S{}, nil)
+	s, arg := r.Select()
+	s = OrderBy(s, "num", "ASC")
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
+func TestQuerySelect2(t *testing.T) {
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), "LIMIT 10")
+	r := New(table, S{}, nil)
+	s, arg := r.Select()
+	s = Limit(s, 10, 0)
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
+func TestQuerySelect3(t *testing.T) {
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), "LIMIT 10 OFFSET 10")
+	r := New(table, S{}, nil)
+	s, arg := r.Select()
+	s = Limit(s, 10, 10)
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
+func TestQuerySelect4(t *testing.T) {
+	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), "ORDER BY num DESC LIMIT 10 OFFSET 10")
+	r := New(table, S{}, nil)
+	s, arg := r.Select()
+	s = Limit(OrderBy(s, "num", "DESC"), 10, 10)
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
+func TestQuerySelect5(t *testing.T) {
+	check := fmt.Sprintf("%s %s %s", fmt.Sprintf(selectTemplate, "num, text", table), fmt.Sprintf(whereTemplate, "num = $1"), "ORDER BY num DESC LIMIT 10 OFFSET 10")
+	filter := NewParam(NewNode("num", "eq", 123))
+	r := New(table, S{}, filter)
+	s, arg := r.Select()
+	s = Limit(OrderBy(s, "num", "DESC"), 10, 10)
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
