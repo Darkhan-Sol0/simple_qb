@@ -99,3 +99,23 @@ func (q *qBilder) Delete() (query string, args []any, err error) {
 	}
 	return query, args, nil
 }
+
+func Limit(query string, limit, offset int) (res string) {
+	if limit > 0 {
+		query = fmt.Sprintf("%s LIMIT %d", query, limit)
+	}
+	if offset > 0 {
+		query = fmt.Sprintf("%s OFFSET %d", query, offset)
+	}
+	return query
+}
+
+func OrderBy(query string, column, order string) (res string) {
+	if column != "" {
+		if order != "ASC" && order != "DESC" {
+			order = "ASC"
+		}
+		query = fmt.Sprintf("%s ORDER BY %s %s", query, column, order)
+	}
+	return query
+}
