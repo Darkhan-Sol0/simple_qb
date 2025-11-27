@@ -53,9 +53,10 @@ type User struct {
 
 ```go
 type Node struct {
-	Tag 	 string
-	Operator string
-	Value    any
+	Tag 	 string // Name colum from table database
+	Operator string // Operator from opMap
+	Value    any	// Values
+	Logic 	 string // AND or OR
 }
 
 type FilterNode = []*Node
@@ -83,7 +84,7 @@ var opMap = map[string]string{
 
 ```go
 user := User{Name: "John"}
-queryParams := NewFilter(NewNode("id", "eq", 123)...)
+queryParams := NewFilter(NewNode("id", "eq", 123), NewNodeOr("text", "like", 123)...)
 myStruct := simple_qb.New("users", user, queryParams)
 ```
 
@@ -130,9 +131,13 @@ query, args, err := myStruct.Delete()
 
 - **Delete()**: Генерация SQL-запроса Delete.
 
-- **NewFilter(tagName, operator string, value any)**: Генерация мапы для условия фильтрации.
+- **NewNode(tag, operator string, value any)**: Генерация ноды для параметра м логикой AND
+ 
+- **NewNodeOr(tag, operator string, value any)**: Генерация ноды для параметра м логикой OR
 
-- **AddFilter(tagName, operator string, value any)**: Добавляет условия фильтрации в мапу.
+- **NewParam(tagName, operator string, value any)**: Генерация мапы для условия фильтрации.
+
+- **AddParam(tagName, operator string, value any)**: Добавляет условия фильтрации в мапу.
 ---
 
 ## Примеры запросов

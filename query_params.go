@@ -21,7 +21,7 @@ const (
 type qBilder struct {
 	table  string
 	data   any
-	params FilterNode
+	params ParamNode
 }
 
 type Node struct {
@@ -31,7 +31,7 @@ type Node struct {
 	Logic    string
 }
 
-type FilterNode = []*Node
+type ParamNode = []*Node
 
 // пока такие теги, может посже изменить
 
@@ -44,7 +44,7 @@ var opMap = map[string]string{
 	"gt":      ">",           // больше
 	"gte":     ">=",          // больше или равно
 	"like":    "LIKE",        // похоже на (для строковых выражений)
-	"in":      "IN",          // входит в перечень
+	"in":      "IN",          // входит в перечень (depricatet)
 	"null":    "IS NULL",     // пустое значение
 	"notnull": "IS NOT NULL", // непустое значение
 }

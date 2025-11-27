@@ -16,7 +16,7 @@ type QBilder interface {
 	Delete() (query string, args []any, err error)
 }
 
-func New(table string, data any, params FilterNode) QBilder {
+func New(table string, data any, params ParamNode) QBilder {
 	return &qBilder{
 		table:  table,
 		data:   data,
@@ -24,12 +24,12 @@ func New(table string, data any, params FilterNode) QBilder {
 	}
 }
 
-func NewFilter(node ...*Node) (nodes FilterNode) {
+func NewParam(node ...*Node) (nodes ParamNode) {
 	nodes = append(nodes, node...)
 	return nodes
 }
 
-func AddFilter(nodes FilterNode, node ...*Node) FilterNode {
+func AddParam(nodes ParamNode, node ...*Node) ParamNode {
 	nodes = append(nodes, node...)
 	return nodes
 }

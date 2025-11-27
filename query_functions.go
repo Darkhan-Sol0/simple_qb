@@ -44,63 +44,45 @@ func getPlaceholders(count int) (placeholders []string) {
 	return placeholders
 }
 
-// Нужно както впиндюрить оператор OR
-
 // getWhere builds WHERE condition string based on structured data and special tags.
 // Returns formatted WHERE clause combining columns and operators via AND.
 
-func getWhere(data FilterNode, startIndex int) (query string, args []any) {
+func getWhere(data ParamNode, startIndex int) (query string, args []any) {
 	if len(data) == 0 {
 		return "", nil
 	}
-	var colums []string
+	colums := make([]string, 2)
 	count := 1
-	for i, v := range data {
+	for _, v := range data {
 		logic := v.Logic
-		tag := v.Operator
+		operator := v.Operator
+		tag := v.Tag
 		val := v.Value
-		if tag != "" && opMap[tag] != "" {
-			switch tag {
+		if operator != "" && opMap[operator] != "" {
+			switch operator {
 			case "in":
-				text := fmt.Sprintf("%s %s ($%d)", v.Tag, opMap[tag], startIndex+count)
-				if i > 0 {
-					if logic == "" {
-						text = fmt.Sprintf("%s %s", "AND", text)
-					} else {
-						text = fmt.Sprintf("%s %s", logic, text)
-					}
-				}
-				colums = append(colums, text)
+				colums[1] = fmt.Sprintf("%s %s ($%d)", tag, opMap[operator], startIndex+count)
 				args = append(args, val)
 				count++
 			case "null", "notnull":
-				text := fmt.Sprintf("%s %s", v.Tag, opMap[tag])
-				if i > 0 {
-					if logic == "" {
-						text = fmt.Sprintf("%s %s", "AND", text)
-					} else {
-						text = fmt.Sprintf("%s %s", logic, text)
-					}
-				}
-				colums = append(colums, text)
+				colums[1] = fmt.Sprintf("%s %s", tag, opMap[operator])
+
 			default:
-				text := fmt.Sprintf("%s %s $%d", v.Tag, opMap[tag], startIndex+count)
-				if i > 0 {
-					if logic == "" {
-						text = fmt.Sprintf("%s %s", "AND", text)
-					} else {
-						text = fmt.Sprintf("%s %s", logic, text)
-					}
-				}
-				colums = append(colums, text)
+				colums[1] = fmt.Sprintf("%s %s $%d", tag, opMap[operator], startIndex+count)
 				args = append(args, val)
 				count++
 			}
+			if colums[0] != "" {
+				text := strings.Join(colums, fmt.Sprintf(" %s ", logic))
+				colums[0] = text
+			} else {
+				colums[0] = colums[1]
+			}
+			colums[1] = ""
 		}
 	}
 	if len(colums) == 0 {
 		return "", nil
 	}
-
-	return fmt.Sprintf(whereTemplate, strings.Join(colums, " ")), args
+	return fmt.Sprintf(whereTemplate, colums[0]), args
 }
