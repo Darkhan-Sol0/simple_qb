@@ -40,10 +40,7 @@ import "github.com/Darkhan-Sol0/simple_qb"
 ### Пример структуры:
 
 ```go
-type User struct {
-    ID   int    `db:"id"`
-    Name string `db:"name"`
-}
+
 ```
 
 | Поле          | Назначение                  |
@@ -52,14 +49,7 @@ type User struct {
 
 
 ```go
-type Node struct {
-	Tag 	 string // Name colum from table database
-	Operator string // Operator from opMap
-	Value    any	// Values
-	Logic 	 string // AND or OR
-}
 
-type FilterNode = []*Node
 ```
 
 ```go
@@ -83,33 +73,31 @@ var opMap = map[string]string{
 ### Конструктор New:
 
 ```go
-user := User{Name: "John"}
-queryParams := NewFilter(NewNode("id", "eq", 123), NewNodeOr("text", "like", 123)...)
-myStruct := simple_qb.New("users", user, queryParams)
+
 ```
 
 ### Генерация запроса INSERT:
 
 ```go
-query, args := myStruct.Insert()
+
 ```
 
-### Генерация запроса SELECT с условием:
+### Генерация запроса SELECT:
 
 ```go
-query, args := myStruct.Select()
+
 ```
 
 ### Генерация запроса UPDATE:
 
 ```go
-query, args, err := myStruct.Update()
+
 ```
 
 ### Генерация запроса Delete:
 
 ```go
-query, args, err := myStruct.Delete()
+
 ```
 
 ---
@@ -118,30 +106,7 @@ query, args, err := myStruct.Delete()
 
 Основные функции пакета:
 
-- **New(tableName, data, params)**: Генерация SQL-запроса.
-  - `tableName`: Имя таблицы.
-  - `data`: Структура данных для запроса.
-  - `params`: Параметры для условия WHERE (может быть картой).
 
-- **Insert()**: Генерация SQL-запроса Inserr.
-
-- **Select()**: Генерация SQL-запроса Select.
-
-- **Update()**: Генерация SQL-запроса Update.
-
-- **Delete()**: Генерация SQL-запроса Delete.
-
-- **NewNode(tag, operator string, value any)**: Генерация ноды для параметра м логикой AND
- 
-- **NewNodeOr(tag, operator string, value any)**: Генерация ноды для параметра м логикой OR
-
-- **NewParam(tagName, operator string, value any)**: Генерация мапы для условия фильтрации.
-
-- **AddParam(tagName, operator string, value any)**: Добавляет условия фильтрации в мапу.
-
-- **Limit(query string, limit, offset int)**: Вспомогательная функция для добавления LIMIT и OFFSET.
-
-- **OrderBy(query string, column, order string)**: Вспомогательная функция для добавления ORDER BY и ASC/DESC. Default ASC
 ---
 
 ## Примеры запросов
