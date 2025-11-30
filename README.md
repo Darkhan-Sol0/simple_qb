@@ -73,55 +73,55 @@ var opMap = map[string]string{
 ### Конструктор New:
 
 ```go
-q := New("hui")
+q := New("table")
 ```
 
 ### Генерация Params:
 
 ```go
-q := New("hui").Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe"))
+q := New("table").Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe"))
 ```
 
 ### Генерация запроса INSERT:
 
 ```go
-q := New("hui").Insert(S{N: 123, T: "asd"})
+q := New("table").Insert(S{N: 123, T: "asd"})
 ```
 
 ### Генерация запроса SELECT:
 
 ```go
-q := New("hui").Select(S{N: 123, T: "asd"})
+q := New("table").Select(S{N: 123, T: "asd"})
 ```
 
 ### Генерация запроса UPDATE:
 
 ```go
-q := New("hui").Update(S{N: 123, T: "asd"})
+q := New("table").Update(S{N: 123, T: "asd"})
 ```
 
 ### Генерация запроса DELETE:
 
 ```go
-q := New("hui").Delete(S{N: 123, T: "asd"})
+q := New("table").Delete(S{N: 123, T: "asd"})
 ```
 
 ### Генерация OrderBY:
 
 ```go
-q := New("hui").OrderBy("num", "ASC")
+q := New("table").OrderBy("num", "ASC")
 ```
 
 ### Генерация Limit:
 
 ```go
-q := New("hui").Limit(10, 10)
+q := New("table").Limit(10, 10)
 ```
 
 ### Полная генерация
 
 ```go
-a, b := New("hui").Select(S{N: 123, T: "asd"}).Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe")).OrderBy("num", "ASC").Limit(10, 10).Generate()
+a, b := New("table").Select(S{N: 123, T: "asd"}).Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe")).OrderBy("num", "ASC").Limit(10, 10).Generate()
 
 ```
 
