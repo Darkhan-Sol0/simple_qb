@@ -11,8 +11,9 @@ type (
 	qBuilder struct {
 		dbTableName string
 		method      string
-		query       query.Query
-		params      params.Params
+
+		query  query.Query
+		params params.Params
 
 		limit string
 		order string

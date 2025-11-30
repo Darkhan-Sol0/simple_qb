@@ -40,6 +40,10 @@ import "github.com/Darkhan-Sol0/simple_qb"
 ### Пример структуры:
 
 ```go
+type S struct {
+	N int    `db:"num"`
+	T string `db:"text"`
+}
 
 ```
 
@@ -47,10 +51,6 @@ import "github.com/Darkhan-Sol0/simple_qb"
 |-------------------|----------------------------|
 | `db:"имя_поля"`   | Имя поля в базе данных       |
 
-
-```go
-
-```
 
 ```go
 var opMap = map[string]string{
@@ -73,30 +73,55 @@ var opMap = map[string]string{
 ### Конструктор New:
 
 ```go
+q := New("hui")
+```
 
+### Генерация Params:
+
+```go
+q := New("hui").Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe"))
 ```
 
 ### Генерация запроса INSERT:
 
 ```go
-
+q := New("hui").Insert(S{N: 123, T: "asd"})
 ```
 
 ### Генерация запроса SELECT:
 
 ```go
-
+q := New("hui").Select(S{N: 123, T: "asd"})
 ```
 
 ### Генерация запроса UPDATE:
 
 ```go
-
+q := New("hui").Update(S{N: 123, T: "asd"})
 ```
 
-### Генерация запроса Delete:
+### Генерация запроса DELETE:
 
 ```go
+q := New("hui").Delete(S{N: 123, T: "asd"})
+```
+
+### Генерация OrderBY:
+
+```go
+q := New("hui").OrderBy("num", "ASC")
+```
+
+### Генерация Limit:
+
+```go
+q := New("hui").Limit(10, 10)
+```
+
+### Полная генерация
+
+```go
+a, b := New("hui").Select(S{N: 123, T: "asd"}).Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe")).OrderBy("num", "ASC").Limit(10, 10).Generate()
 
 ```
 
@@ -111,7 +136,7 @@ var opMap = map[string]string{
 
 ## Примеры запросов
 
-### Пример запросов:
+### Пример получаемых запросов:
 
 ```sql
 INSERT INTO users (num, text) VALUES ($1, $2)
