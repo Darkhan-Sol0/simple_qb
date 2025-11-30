@@ -21,15 +21,14 @@ func TestQueryInsert(t *testing.T) {
 	}
 }
 
-// func TestQuerySelect(t *testing.T) {
-// 	check := fmt.Sprintf(selectTemplate, "num, text", table)
-// 	r := New(table, S{}, nil)
-// 	s, arg := r.Select()
-// 	fmt.Println(s, arg)
-// 	if s != check {
-// 		t.Errorf("error: %s || %s", s, check)
-// 	}
-// }
+func TestQuerySelect(t *testing.T) {
+	check := fmt.Sprintf("SELECT num, text FROM %s WHERE num IN ($1, $2, $3)", table)
+	s, arg := New(table).Select(S{}).Params(NewParam("num", "in", []string{"1", "sad", "da11"})).Generate()
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
 
 // func TestQuerySelectWhere(t *testing.T) {
 // 	check := fmt.Sprintf("%s %s", fmt.Sprintf(selectTemplate, "num, text", table), fmt.Sprintf(whereTemplate, "num = $1"))

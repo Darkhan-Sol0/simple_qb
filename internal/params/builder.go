@@ -2,6 +2,7 @@ package params
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -79,9 +80,18 @@ func (p *params) getWhere(startIndex int) (query string, args []any) {
 		if operator != "" && opMap[operator] != "" {
 			switch operator {
 			case "in":
-				colums[1] = fmt.Sprintf("%s %s ($%d)", column, opMap[operator], startIndex+count)
-				args = append(args, val)
-				count++
+				v := reflect.ValueOf(val)
+				if v.Kind() == reflect.Slice {
+					l := v.Len()
+					placeholders := make([]string, l)
+					for i := 0; i < l; i++ {
+						elem := v.Index(i)
+						placeholders[i] = fmt.Sprintf("$%d", startIndex+count)
+						args = append(args, elem.Interface())
+						count++
+					}
+					colums[1] = fmt.Sprintf("%s %s (%s)", column, opMap[operator], strings.Join(placeholders, ", "))
+				}
 			case "null", "notnull":
 				colums[1] = fmt.Sprintf("%s %s", column, opMap[operator])
 
