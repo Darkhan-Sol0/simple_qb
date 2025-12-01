@@ -17,6 +17,8 @@ type (
 
 		limit string
 		order string
+
+		returning string
 	}
 
 	QBuilder interface {
@@ -28,6 +30,7 @@ type (
 		Params(nodes ...*params.Node) QBuilder
 		Limit(limit, offset int) QBuilder
 		OrderBy(column, order string) QBuilder
+		Returning(column string) QBuilder
 
 		Generate() (string, []any)
 	}
@@ -72,7 +75,9 @@ func (b *qBuilder) Delete() QBuilder {
 }
 
 func (b *qBuilder) Params(nodes ...*params.Node) QBuilder {
-	b.params = params.New(nodes...)
+	if nodes != nil {
+		b.params = params.New(nodes...)
+	}
 	return b
 }
 
@@ -96,6 +101,13 @@ func (b *qBuilder) OrderBy(column, order string) QBuilder {
 	return b
 }
 
+func (b *qBuilder) Returning(column string) QBuilder {
+	if column != "" {
+		b.returning = fmt.Sprintf("RETURNING %s", column)
+	}
+	return b
+}
+
 func (b *qBuilder) Generate() (string, []any) {
 	if (b.method == "UPDATE" || b.method == "DELETE") && b.params == nil {
 		return "", nil
@@ -115,6 +127,10 @@ func (b *qBuilder) Generate() (string, []any) {
 
 	if b.limit != "" {
 		q = fmt.Sprintf("%s %s", q, b.limit)
+	}
+
+	if b.returning != "" {
+		q = fmt.Sprintf("%s %s", q, b.returning)
 	}
 
 	return q, args
