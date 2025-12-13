@@ -8,29 +8,35 @@ import (
 
 var whereTemplate = "WHERE %s"
 
-var opMap = map[string]string{
-	"eq":      "=",           // равно
-	"neq":     "<>",          // неравно
-	"lt":      "<",           // меньше
-	"lte":     "<=",          // меньше или равно
-	"gt":      ">",           // больше
-	"gte":     ">=",          // больше или равно
-	"like":    "LIKE",        // похоже на (для строковых выражений)
-	"in":      "IN",          // входит в перечень (depricatet)
-	"null":    "IS NULL",     // пустое значение
-	"notnull": "IS NOT NULL", // непустое значение
-}
-
 type (
-	Node struct {
-		column   string
-		operator string
-		value    any
-		logic    string
+	node struct {
+		ncolumn   string
+		noperator string
+		nvalue    any
+		nlogic    string
+	}
+
+	Node interface {
+		column() string
+		operator() string
+		value() any
+		logic() string
+
+		Or() Node
+		Eq(value any) Node
+		NotEq(value any) Node
+		Less(value any) Node
+		LessEq(value any) Node
+		Gr(value any) Node
+		GrEq(value any) Node
+		Like(value any) Node
+		In(value any) Node
+		Null() Node
+		NotNull() Node
 	}
 
 	params struct {
-		nodes []*Node
+		nodes []Node
 	}
 
 	Params interface {
@@ -38,25 +44,97 @@ type (
 	}
 )
 
-func NewNode(column, operator string, value any) *Node {
-	return &Node{
-		column:   column,
-		operator: operator,
-		value:    value,
-		logic:    "AND",
+func NewNode(column string) Node {
+	return &node{
+		ncolumn:   column,
+		noperator: "=",
+		nvalue:    nil,
+		nlogic:    "AND",
 	}
 }
 
-func NewNodeOr(column, operator string, value any) *Node {
-	return &Node{
-		column:   column,
-		operator: operator,
-		value:    value,
-		logic:    "OR",
-	}
+func (n *node) Eq(value any) Node {
+	n.noperator = "="
+	n.nvalue = value
+	return n
 }
 
-func New(nodes ...*Node) Params {
+func (n *node) NotEq(value any) Node {
+	n.noperator = "<>"
+	n.nvalue = value
+	return n
+}
+
+func (n *node) Less(value any) Node {
+	n.noperator = "<"
+	n.nvalue = value
+	return n
+}
+
+func (n *node) LessEq(value any) Node {
+	n.noperator = "<="
+	n.nvalue = value
+	return n
+}
+
+func (n *node) Gr(value any) Node {
+	n.noperator = ">"
+	n.nvalue = value
+	return n
+}
+
+func (n *node) GrEq(value any) Node {
+	n.noperator = ">="
+	n.nvalue = value
+	return n
+}
+
+func (n *node) Like(value any) Node {
+	n.noperator = "LIKE"
+	n.nvalue = value
+	return n
+}
+
+func (n *node) In(value any) Node {
+	n.noperator = "IN"
+	n.nvalue = value
+	return n
+}
+
+func (n *node) Null() Node {
+	n.noperator = "IS NULL"
+	return n
+}
+
+func (n *node) NotNull() Node {
+	n.noperator = "IS NOT NULL"
+	return n
+}
+
+func (n *node) Or() Node {
+	n.nlogic = "OR"
+	return n
+}
+
+func (n *node) column() string {
+	return n.ncolumn
+}
+
+func (n *node) operator() string {
+	return n.noperator
+}
+
+func (n *node) value() any {
+	return n.nvalue
+}
+
+func (n *node) logic() string {
+	return n.nlogic
+}
+
+// --------------------------------
+
+func New(nodes ...Node) Params {
 	return &params{
 		nodes: nodes,
 	}
@@ -70,16 +148,16 @@ func (p *params) getWhere(startIndex int) (query string, args []any) {
 	if len(p.nodes) == 0 {
 		return "", nil
 	}
-	colums := make([]string, 2)
+	columns := make([]string, 2)
 	count := 1
 	for _, v := range p.nodes {
-		logic := v.logic
-		operator := v.operator
-		column := v.column
-		val := v.value
-		if operator != "" && opMap[operator] != "" {
+		logic := v.logic()
+		operator := v.operator()
+		column := v.column()
+		val := v.value()
+		if operator != "" {
 			switch operator {
-			case "in":
+			case "IN":
 				v := reflect.ValueOf(val)
 				if v.Kind() == reflect.Slice {
 					l := v.Len()
@@ -90,27 +168,27 @@ func (p *params) getWhere(startIndex int) (query string, args []any) {
 						args = append(args, elem.Interface())
 						count++
 					}
-					colums[1] = fmt.Sprintf("%s %s (%s)", column, opMap[operator], strings.Join(placeholders, ", "))
+					columns[1] = fmt.Sprintf("%s %s (%s)", column, operator, strings.Join(placeholders, ", "))
 				}
-			case "null", "notnull":
-				colums[1] = fmt.Sprintf("%s %s", column, opMap[operator])
+			case "IS NULL", "IS NOT NULL":
+				columns[1] = fmt.Sprintf("%s %s", column, operator)
 
 			default:
-				colums[1] = fmt.Sprintf("%s %s $%d", column, opMap[operator], startIndex+count)
+				columns[1] = fmt.Sprintf("%s %s $%d", column, operator, startIndex+count)
 				args = append(args, val)
 				count++
 			}
-			if colums[0] != "" {
-				text := strings.Join(colums, fmt.Sprintf(" %s ", logic))
-				colums[0] = text
+			if columns[0] != "" {
+				text := strings.Join(columns, fmt.Sprintf(" %s ", logic))
+				columns[0] = text
 			} else {
-				colums[0] = colums[1]
+				columns[0] = columns[1]
 			}
-			colums[1] = ""
+			columns[1] = ""
 		}
 	}
-	if len(colums) == 0 {
+	if len(columns) == 0 {
 		return "", nil
 	}
-	return fmt.Sprintf(whereTemplate, colums[0]), args
+	return fmt.Sprintf(whereTemplate, columns[0]), args
 }

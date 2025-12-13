@@ -52,20 +52,6 @@ type S struct {
 | `db:"имя_поля"`   | Имя поля в базе данных       |
 
 
-```go
-var opMap = map[string]string{
-	"eq":      "=",           // равно
-	"neq":     "<>",          // неравно
-	"lt":      "<",           // меньше
-	"lte":     "<=",          // меньше или равно
-	"gt":      ">",           // больше
-	"gte":     ">=",          // больше или равно
-	"like":    "LIKE",        // похоже на (для строковых выражений) 
-	"in":      "IN",          // входит в перечень 
-	"null":    "IS NULL",     // пустое значение
-	"notnull": "IS NOT NULL", // непустое значение 
-}
-```
 ---
 
 ## Генерация запросов
@@ -79,7 +65,7 @@ q := New("table")
 ### Генерация Params:
 
 ```go
-q := New("table").Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe"))
+q := New("table").Params(NewParam("num").Eq(42), NewParam("text").NotNull().Or())
 ```
 
 ### Генерация запроса INSERT:
@@ -103,7 +89,7 @@ q := New("table").Update(S{N: 123, T: "asd"})
 ### Генерация запроса DELETE:
 
 ```go
-q := New("table").Delete(S{N: 123, T: "asd"})
+q := New("table").Delete()
 ```
 
 ### Генерация OrderBY:
@@ -121,7 +107,7 @@ q := New("table").Limit(10, 10)
 ### Полная генерация
 
 ```go
-a, b := New("table").Select(S{N: 123, T: "asd"}).Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe")).OrderBy("num", "ASC").Limit(10, 10).Generate()
+a, b := New("table").Select(S{N: 123, T: "asd"}).Params(NewParam("num"), NewParam("text", "gt", "qwe").Or()).OrderBy("num", "ASC").Limit(10, 10).Generate()
 
 ```
 
@@ -130,7 +116,7 @@ a, b := New("table").Select(S{N: 123, T: "asd"}).Params(NewParam("num", "eq", 23
 ## API пакета
 
 Основные функции пакета:
-
+Простая генерация строки SQL запроса.
 
 ---
 

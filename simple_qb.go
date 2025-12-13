@@ -27,7 +27,7 @@ type (
 		Update(data any) QBuilder
 		Delete() QBuilder
 
-		Params(nodes ...*params.Node) QBuilder
+		Params(nodes ...params.Node) QBuilder
 		Limit(limit, offset int) QBuilder
 		OrderBy(column, order string) QBuilder
 		Returning(column string) QBuilder
@@ -42,12 +42,8 @@ func New(dbTable string) QBuilder {
 	}
 }
 
-func NewParam(column, operator string, value any) *params.Node {
-	return params.NewNode(column, operator, value)
-}
-
-func NewOrParam(column, operator string, value any) *params.Node {
-	return params.NewNodeOr(column, operator, value)
+func NewParam(column string) params.Node {
+	return params.NewNode(column)
 }
 
 func (b *qBuilder) Select(data any) QBuilder {
@@ -74,7 +70,7 @@ func (b *qBuilder) Delete() QBuilder {
 	return b
 }
 
-func (b *qBuilder) Params(nodes ...*params.Node) QBuilder {
+func (b *qBuilder) Params(nodes ...params.Node) QBuilder {
 	if nodes != nil {
 		b.params = params.New(nodes...)
 	}

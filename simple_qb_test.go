@@ -13,6 +13,24 @@ type S struct {
 var table = "users"
 
 func TestQueryInsert(t *testing.T) {
+	check := "INSERT INTO users (num, text) VALUES ($1, $2)"
+	s, arg := New(table).Insert(S{Num: 1, Text: "hui"}).Generate()
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
+func TestQueryInsert1(t *testing.T) {
+	check := "INSERT INTO users (num, text) VALUES ($1, $2)"
+	s, arg := New(table).Insert(S{Num: 1}).Generate()
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
+func TestQuerySelect(t *testing.T) {
 	check := fmt.Sprintf("SELECT num, text FROM %s", table)
 	s, arg := New(table).Select(S{}).Generate()
 	fmt.Println(s, arg)
@@ -21,18 +39,27 @@ func TestQueryInsert(t *testing.T) {
 	}
 }
 
-func TestQuerySelect(t *testing.T) {
+func TestQuerySelect1(t *testing.T) {
 	check := fmt.Sprintf("SELECT num, text FROM %s WHERE num IN ($1, $2, $3)", table)
-	s, arg := New(table).Select(S{}).Params(NewParam("num", "in", []string{"1", "sad", "da11"})).Generate()
+	s, arg := New(table).Select(S{}).Params(NewParam("num").In([]string{"1", "sad", "da11"})).Generate()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error: %s || %s", s, check)
 	}
 }
 
-func TestQuerySelect1(t *testing.T) {
+func TestQuerySelect2(t *testing.T) {
 	check := fmt.Sprintf("SELECT num, text FROM %s WHERE num IN ($1, $2, $3) RETURNING num", table)
-	s, arg := New(table).Select(S{}).Params(NewParam("num", "in", []string{"1", "sad", "da11"})).Returning("num").Generate()
+	s, arg := New(table).Select(S{}).Params(NewParam("num").In([]string{"1", "sad", "da11"})).Returning("num").Generate()
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
+func TestQuerySelect3(t *testing.T) {
+	check := fmt.Sprintf("SELECT num, text FROM %s WHERE num = $1 OR num < $2", table)
+	s, arg := New(table).Select(S{}).Params(NewParam("num").Eq(1), NewParam("num").Less(5).Or()).Generate()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error: %s || %s", s, check)
