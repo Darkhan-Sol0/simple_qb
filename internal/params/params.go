@@ -49,6 +49,9 @@ type (
 )
 
 func (n *node) query(startIndex int) string {
+	if len(n.nquery) == 0 {
+		return ""
+	}
 	if n.nquery[len(n.nquery)-1] == "OR" || n.nquery[len(n.nquery)-1] == "AND" {
 		t := []string{}
 		for i := 0; i < len(n.nquery)-1; i++ {
