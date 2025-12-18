@@ -15,7 +15,7 @@ type (
 	}
 
 	Insert interface {
-		Params(nodes ...params.Node) Insert
+		Params(par params.Params) Insert
 		Returning(column string) Insert
 		Generate() (string, []any)
 	}
@@ -27,9 +27,9 @@ func New(tableName string, data any) Insert {
 	}
 }
 
-func (s *qInsert) Params(nodes ...params.Node) Insert {
-	if nodes != nil {
-		s.params = params.New(nodes...)
+func (s *qInsert) Params(par params.Params) Insert {
+	if par != nil {
+		s.params = par
 	}
 	return s
 }

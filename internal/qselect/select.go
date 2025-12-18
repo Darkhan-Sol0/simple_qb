@@ -16,7 +16,7 @@ type (
 	}
 
 	Select interface {
-		Params(nodes ...params.Node) Select
+		Params(par params.Params) Select
 		Limit(limit, offset int) Select
 		OrderBy(column, order string) Select
 		Generate() (string, []any)
@@ -29,9 +29,9 @@ func New(tableName string, data any) Select {
 	}
 }
 
-func (s *qSelect) Params(nodes ...params.Node) Select {
-	if nodes != nil {
-		s.params = params.New(nodes...)
+func (s *qSelect) Params(par params.Params) Select {
+	if par != nil {
+		s.params = par
 	}
 	return s
 }

@@ -14,7 +14,7 @@ type (
 	}
 
 	Delete interface {
-		Params(nodes ...params.Node) Delete
+		Params(par params.Params) Delete
 		Generate() (string, []any)
 	}
 )
@@ -25,9 +25,9 @@ func New(tableName string, data any) Delete {
 	}
 }
 
-func (s *qDelete) Params(nodes ...params.Node) Delete {
-	if nodes != nil {
-		s.params = params.New(nodes...)
+func (s *qDelete) Params(par params.Params) Delete {
+	if par != nil {
+		s.params = par
 	}
 	return s
 }

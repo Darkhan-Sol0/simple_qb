@@ -14,7 +14,7 @@ type (
 	}
 
 	Update interface {
-		Params(nodes ...params.Node) Update
+		Params(par params.Params) Update
 		Generate() (string, []any)
 	}
 )
@@ -25,9 +25,9 @@ func New(tableName string, data any) Update {
 	}
 }
 
-func (s *qUpdate) Params(nodes ...params.Node) Update {
-	if nodes != nil {
-		s.params = params.New(nodes...)
+func (s *qUpdate) Params(par params.Params) Update {
+	if par != nil {
+		s.params = par
 	}
 	return s
 }

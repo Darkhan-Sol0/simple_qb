@@ -38,10 +38,13 @@ type (
 
 	params struct {
 		nodes []Node
+		query string
 	}
 
 	Params interface {
 		Generate(startIndex int) (query string, args []any)
+		Or(node Node) Params
+		And(node Node) Params
 	}
 )
 
@@ -155,10 +158,27 @@ func (n *node) NotBetween(left, right any) Node {
 
 // --------------------------------
 
-func New(nodes ...Node) Params {
+func New(node Node) Params {
 	return &params{
-		nodes: nodes,
+		nodes: []Node{node},
+		query: whereTemplate,
 	}
+}
+
+func (p *params) Or(node Node) Params {
+	if node != nil {
+		p.nodes = append(p.nodes, node)
+		p.query = fmt.Sprintf(p.query, "%s OR %s")
+	}
+	return p
+}
+
+func (p *params) And(node Node) Params {
+	if node != nil {
+		p.nodes = append(p.nodes, node)
+		p.query = fmt.Sprintf(p.query, "%s AND %s")
+	}
+	return p
 }
 
 func (p *params) Generate(startIndex int) (query string, args []any) {
@@ -170,12 +190,12 @@ func (p *params) Generate(startIndex int) (query string, args []any) {
 		args = append(args, p.nodes[0].args()...)
 		return s, args
 	}
-	var s []string
+	var s []any
 	if len(p.nodes) > 1 {
 		for _, i := range p.nodes {
 			s = append(s, fmt.Sprintf("(%s)", i.query(startIndex+len(args))))
 			args = append(args, i.args()...)
 		}
 	}
-	return fmt.Sprintf(whereTemplate, strings.Join(s, " AND ")), args
+	return fmt.Sprintf(p.query, s...), args
 }

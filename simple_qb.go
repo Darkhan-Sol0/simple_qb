@@ -21,7 +21,10 @@ type (
 	}
 )
 
-func NewParam(column string) params.Node {
+func NewParam(node params.Node) params.Params {
+	return params.New(node)
+}
+func NewNode(column string) params.Node {
 	return params.NewNode(column)
 }
 
