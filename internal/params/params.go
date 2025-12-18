@@ -49,12 +49,18 @@ type (
 )
 
 func (n *node) query(startIndex int) string {
+	if n.nquery[len(n.nquery)-1] == "OR" || n.nquery[len(n.nquery)-1] == "AND" {
+		t := []string{}
+		for i := 0; i < len(n.nquery)-1; i++ {
+			t = append(t, n.nquery[i])
+		}
+		n.nquery = t
+	}
 	q := strings.Join(n.nquery, " ")
 	var a []any
 	for i := range n.nargs {
 		a = append(a, i+1+startIndex)
 	}
-
 	return fmt.Sprintf(q, a...)
 }
 func (n *node) args() []any {

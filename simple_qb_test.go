@@ -104,9 +104,18 @@ func TestQueryUpdate(t *testing.T) {
 	}
 }
 
-func TestQueryUpdate2(t *testing.T) {
+func TestQueryUpdate1(t *testing.T) {
 	check := fmt.Sprintf("UPDATE %s SET (num, text) = ROW($1, $2) WHERE (num = $3 OR num < $4) AND (text = $5 AND text LIKE $6) OR (text = $7 AND text LIKE $8)", table)
 	s, arg := New(table).Update(S{Num: 5, Text: "qwe"}).Params(NewParam(NewNode("num").Eq(123).Or().Less(5)).And(NewNode("text").Eq("asd").And().Like("asd")).Or(NewNode("text").Eq("asd").And().Like("asd"))).Generate()
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
+func TestQueryUpdate2(t *testing.T) {
+	check := fmt.Sprintf("UPDATE %s SET (num, text) = ROW($1, $2) WHERE num = $3 OR num < $4", table)
+	s, arg := New(table).Update(S{Num: 5, Text: "qwe"}).Params(NewParam(NewNode("num").Eq(123).Or().Less(5).And())).Generate()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error: %s || %s", s, check)
