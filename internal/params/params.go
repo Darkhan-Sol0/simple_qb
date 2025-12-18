@@ -168,7 +168,7 @@ func New(node Node) Params {
 func (p *params) Or(node Node) Params {
 	if node != nil {
 		p.nodes = append(p.nodes, node)
-		p.query = fmt.Sprintf(p.query, "%s OR %s")
+		p.query = fmt.Sprint(p.query, " OR %s")
 	}
 	return p
 }
@@ -176,7 +176,7 @@ func (p *params) Or(node Node) Params {
 func (p *params) And(node Node) Params {
 	if node != nil {
 		p.nodes = append(p.nodes, node)
-		p.query = fmt.Sprintf(p.query, "%s AND %s")
+		p.query = fmt.Sprint(p.query, " AND %s")
 	}
 	return p
 }
