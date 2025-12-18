@@ -2,6 +2,7 @@ package params
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ type (
 		Gr(value any) Node
 		GrEq(value any) Node
 		Like(value any) Node
-		In(value []any) Node
+		In(value any) Node
 		Null() Node
 		NotNull() Node
 	}
@@ -104,13 +105,18 @@ func (n *node) Like(value any) Node {
 	return n
 }
 
-func (n *node) In(value []any) Node {
-	var st []string
-	for range value {
-		st = append(st, "$%d")
+func (n *node) In(value any) Node {
+	v := reflect.ValueOf(value)
+	if v.Kind() == reflect.Slice {
+		l := v.Len()
+		var st []string
+		for i := 0; i < l; i++ {
+			st = append(st, "$%d")
+			elem := v.Index(i)
+			n.nargs = append(n.nargs, elem.Interface())
+		}
+		n.nquery = append(n.nquery, fmt.Sprintf("%s IN (%s)", n.ncolumn, strings.Join(st, ", ")))
 	}
-	n.nargs = append(n.nargs, value...)
-	n.nquery = append(n.nquery, fmt.Sprintf("%s IN (%s)", n.ncolumn, strings.Join(st, ", ")))
 	return n
 }
 
@@ -147,7 +153,9 @@ func (p *params) Generate(startIndex int) (query string, args []any) {
 		return "", nil
 	}
 	if len(p.nodes) == 1 {
-		return fmt.Sprintf(whereTemplate, p.nodes[0].query(startIndex+len(args))), args
+		s := fmt.Sprintf(whereTemplate, p.nodes[0].query(startIndex+len(args)))
+		args = append(args, p.nodes[0].args()...)
+		return s, args
 	}
 	var s []string
 	if len(p.nodes) > 1 {

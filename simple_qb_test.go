@@ -51,8 +51,8 @@ func TestQuerySelect1(t *testing.T) {
 }
 
 func TestQuerySelect2(t *testing.T) {
-	check := fmt.Sprintf("SELECT num, text FROM %s WHERE num IN ($1, $2, $3)", table)
-	s, arg := New(table).Select(S{}).Params(NewParam("num").In([]any{"1", "sad", "da11"})).Generate()
+	check := fmt.Sprintf("SELECT num, text FROM %s WHERE num IN ($1, $2, $3) OR num IS NULL", table)
+	s, arg := New(table).Select(S{}).Params(NewParam("num").In([]any{"1", "sad", "da11"}).Or().Null()).Generate()
 	fmt.Println(s, arg)
 	if s != check {
 		t.Errorf("error: %s || %s", s, check)
