@@ -46,7 +46,7 @@ func (n *node) query(startIndex int) string {
 	q := strings.Join(n.nquery, " ")
 	var a []any
 	for i := range n.nargs {
-		a = append(a, fmt.Sprint(i+1+startIndex))
+		a = append(a, i+1+startIndex)
 	}
 
 	return fmt.Sprintf(q, a...)
@@ -64,50 +64,50 @@ func NewNode(column string) Node {
 
 func (n *node) Eq(value any) Node {
 	n.nargs = append(n.nargs, value)
-	n.nquery = append(n.nquery, fmt.Sprintf("%s = %s", n.ncolumn, "$%s"))
+	n.nquery = append(n.nquery, fmt.Sprintf("%s = %s", n.ncolumn, "$%d"))
 	return n
 }
 
 func (n *node) NotEq(value any) Node {
 	n.nargs = append(n.nargs, value)
-	n.nquery = append(n.nquery, fmt.Sprintf("%s <> %s", n.ncolumn, "$%s"))
+	n.nquery = append(n.nquery, fmt.Sprintf("%s <> %s", n.ncolumn, "$%d"))
 	return n
 }
 
 func (n *node) Less(value any) Node {
 	n.nargs = append(n.nargs, value)
-	n.nquery = append(n.nquery, fmt.Sprintf("%s < %s", n.ncolumn, "$%s"))
+	n.nquery = append(n.nquery, fmt.Sprintf("%s < %s", n.ncolumn, "$%d"))
 	return n
 }
 
 func (n *node) LessEq(value any) Node {
 	n.nargs = append(n.nargs, value)
-	n.nquery = append(n.nquery, fmt.Sprintf("%s <= %s", n.ncolumn, "$%s"))
+	n.nquery = append(n.nquery, fmt.Sprintf("%s <= %s", n.ncolumn, "$%d"))
 	return n
 }
 
 func (n *node) Gr(value any) Node {
 	n.nargs = append(n.nargs, value)
-	n.nquery = append(n.nquery, fmt.Sprintf("%s > %s", n.ncolumn, "$%s"))
+	n.nquery = append(n.nquery, fmt.Sprintf("%s > %s", n.ncolumn, "$%d"))
 	return n
 }
 
 func (n *node) GrEq(value any) Node {
 	n.nargs = append(n.nargs, value)
-	n.nquery = append(n.nquery, fmt.Sprintf("%s >= %s", n.ncolumn, "$%s"))
+	n.nquery = append(n.nquery, fmt.Sprintf("%s >= %s", n.ncolumn, "$%d"))
 	return n
 }
 
 func (n *node) Like(value any) Node {
 	n.nargs = append(n.nargs, value)
-	n.nquery = append(n.nquery, fmt.Sprintf("%s LIKE %s", n.ncolumn, "$%s"))
+	n.nquery = append(n.nquery, fmt.Sprintf("%s LIKE %s", n.ncolumn, "$%d"))
 	return n
 }
 
 func (n *node) In(value []any) Node {
 	var st []string
 	for range value {
-		st = append(st, "$%s")
+		st = append(st, "$%d")
 	}
 	n.nargs = append(n.nargs, value...)
 	n.nquery = append(n.nquery, fmt.Sprintf("%s IN (%s)", n.ncolumn, strings.Join(st, ", ")))
