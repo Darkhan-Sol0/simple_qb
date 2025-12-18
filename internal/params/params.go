@@ -32,6 +32,8 @@ type (
 		In(value any) Node
 		Null() Node
 		NotNull() Node
+		Between(left, right any) Node
+		NotBetween(left, right any) Node
 	}
 
 	params struct {
@@ -137,6 +139,17 @@ func (n *node) Or() Node {
 
 func (n *node) And() Node {
 	n.nquery = append(n.nquery, "AND")
+	return n
+}
+
+func (n *node) Between(left, right any) Node {
+	n.nargs = append(n.nargs, left, right)
+	n.nquery = append(n.nquery, fmt.Sprintf("%s BETWEEN %s AND %s", n.ncolumn, "$%d", "$%d"))
+	return n
+}
+func (n *node) NotBetween(left, right any) Node {
+	n.nargs = append(n.nargs, left, right)
+	n.nquery = append(n.nquery, fmt.Sprintf("%s NOT BETWEEN %s AND %s", n.ncolumn, "$%d", "$%d"))
 	return n
 }
 

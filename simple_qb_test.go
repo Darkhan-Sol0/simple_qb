@@ -86,6 +86,15 @@ func TestQuerySelect5(t *testing.T) {
 	}
 }
 
+func TestQuerySelect6(t *testing.T) {
+	check := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE num BETWEEN $1 AND $2", table)
+	s, arg := New(table).Select(query.Count("")).Params(NewParam("num").Between(123, 134)).Generate()
+	fmt.Println(s, arg)
+	if s != check {
+		t.Errorf("error: %s || %s", s, check)
+	}
+}
+
 func TestQueryUpdate(t *testing.T) {
 	check := fmt.Sprintf("UPDATE %s SET (num, text) = ROW($1, $2) WHERE (num = $3 OR num < $4) AND (text = $5 AND text LIKE $6)", table)
 	s, arg := New(table).Update(S{Num: 5, Text: "qwe"}).Params(NewParam("num").Eq(123).Or().Less(123), NewParam("text").Eq("asd").And().Like("hui")).Generate()
