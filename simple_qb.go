@@ -1,144 +1,47 @@
 package simple_qb
 
 import (
-	"fmt"
-
 	"github.com/Darkhan-Sol0/simple_qb/internal/params"
-	"github.com/Darkhan-Sol0/simple_qb/internal/query"
+	"github.com/Darkhan-Sol0/simple_qb/internal/qdelete"
+	"github.com/Darkhan-Sol0/simple_qb/internal/qinsert"
+	"github.com/Darkhan-Sol0/simple_qb/internal/qselect"
+	"github.com/Darkhan-Sol0/simple_qb/internal/qupdate"
 )
 
 type (
 	qBuilder struct {
-		dbTableName string
-		method      string
-
-		query  query.Query
-		params params.Params
-
-		limit string
-		order string
-
-		returning string
+		tableName string
 	}
 
 	QBuilder interface {
-		Select(data any) QBuilder
-		Insert(data any) QBuilder
-		Update(data any) QBuilder
-		Delete() QBuilder
-
-		Params(nodes ...params.Node) QBuilder
-		Limit(limit, offset int) QBuilder
-		OrderBy(column, order string) QBuilder
-		Returning(column string) QBuilder
-
-		Generate() (string, []any)
+		Select(data any) qselect.Select
+		Insert(data any) qinsert.Insert
+		Update(data any) qupdate.Update
+		Delete(data any) qdelete.Delete
 	}
 )
-
-func New(dbTable string) QBuilder {
-	return &qBuilder{
-		dbTableName: dbTable,
-	}
-}
 
 func NewParam(column string) params.Node {
 	return params.NewNode(column)
 }
 
-func (b *qBuilder) Select(data any) QBuilder {
-	b.method = "SELECT"
-	b.query = query.New(b.method, b.dbTableName, data)
-	return b
+func New(tableName string) QBuilder {
+	return &qBuilder{
+		tableName: tableName,
+	}
+}
+func (q *qBuilder) Select(data any) qselect.Select {
+	return qselect.New(q.tableName, data)
 }
 
-func (b *qBuilder) Insert(data any) QBuilder {
-	b.method = "INSERT"
-	b.query = query.New(b.method, b.dbTableName, data)
-	return b
+func (q *qBuilder) Insert(data any) qinsert.Insert {
+	return qinsert.New(q.tableName, data)
 }
 
-func (b *qBuilder) Update(data any) QBuilder {
-	b.method = "UPDATE"
-	b.query = query.New(b.method, b.dbTableName, data)
-	return b
+func (q *qBuilder) Update(data any) qupdate.Update {
+	return qupdate.New(q.tableName, data)
 }
 
-func (b *qBuilder) Delete() QBuilder {
-	b.method = "DELETE"
-	b.query = query.New(b.method, b.dbTableName, nil)
-	return b
+func (q *qBuilder) Delete(data any) qdelete.Delete {
+	return qdelete.New(q.tableName, data)
 }
-
-func (b *qBuilder) Params(nodes ...params.Node) QBuilder {
-	if nodes != nil {
-		b.params = params.New(nodes...)
-	}
-	return b
-}
-
-func (b *qBuilder) Limit(limit, offset int) QBuilder {
-	if limit > 0 {
-		b.limit = fmt.Sprintf("LIMIT %d", limit)
-		if offset > 0 {
-			b.limit = fmt.Sprintf("%s OFFSET %d", b.limit, offset)
-		}
-	}
-	return b
-}
-
-func (b *qBuilder) OrderBy(column, order string) QBuilder {
-	if column != "" {
-		if order != "ASC" && order != "DESC" {
-			order = "ASC"
-		}
-		b.order = fmt.Sprintf("ORDER BY %s %s", column, order)
-	}
-	return b
-}
-
-func (b *qBuilder) Returning(column string) QBuilder {
-	if column != "" {
-		b.returning = fmt.Sprintf("RETURNING %s", column)
-	}
-	return b
-}
-
-func (b *qBuilder) Generate() (string, []any) {
-	if (b.method == "UPDATE" || b.method == "DELETE") && b.params == nil {
-		return "", nil
-	}
-
-	q, args := b.query.Generate()
-	if b.params != nil {
-		w, arg := b.params.Generate(len(args))
-
-		q = fmt.Sprintf("%s %s", q, w)
-		args = append(args, arg...)
-	}
-
-	if b.order != "" {
-		q = fmt.Sprintf("%s %s", q, b.order)
-	}
-
-	if b.limit != "" {
-		q = fmt.Sprintf("%s %s", q, b.limit)
-	}
-
-	if b.returning != "" {
-		q = fmt.Sprintf("%s %s", q, b.returning)
-	}
-
-	return q, args
-}
-
-// func main() {
-// 	type S struct {
-// 		N int    `db:"num"`
-// 		T string `db:"text"`
-// 	}
-
-// 	a, b := New("hui").Select(S{N: 123, T: "asd"}).Params(NewParam("num", "eq", 23), NewOrParam("text", "gt", "qwe")).OrderBy("num", "ASC").Limit(10, 10).Generate()
-
-// 	fmt.Println(a, b)
-// }

@@ -13,6 +13,10 @@ var methodTemplate = map[string]string{
 	"DELETE": "DELETE FROM %s",
 }
 
+type count struct {
+	column string
+}
+
 const tag = "db"
 
 type (
@@ -24,9 +28,18 @@ type (
 	}
 
 	Query interface {
-		Generate() (string, []any)
+		SelectGenerate() string
+		InsertGenerate() (string, []any)
+		UpdateGenerate() (string, []any)
+		DeleteGenerate() string
 	}
 )
+
+func Count(data string) count {
+	return count{
+		column: data,
+	}
+}
 
 func New(method, table string, data any) Query {
 	return &query{
@@ -37,35 +50,43 @@ func New(method, table string, data any) Query {
 	}
 }
 
-func (q *query) Generate() (string, []any) {
-	switch q.method {
-	case "SELECT":
-		return q.selectBuild(), nil
-	case "INSERT":
-		return q.insertBuild(), getArguments(q.data)
-	case "UPDATE":
-		return q.updateBuild(), getArguments(q.data)
-	case "DELETE":
-		return q.deleteBuild(), nil
-	}
-	return "", nil
+func (q *query) SelectGenerate() string {
+	return q.selectBuild()
+}
+
+func (q *query) InsertGenerate() (string, []any) {
+	return q.insertBuild(), getArguments(q.data)
+}
+
+func (q *query) UpdateGenerate() (string, []any) {
+	return q.updateBuild(), getArguments(q.data)
+}
+
+func (q *query) DeleteGenerate() string {
+	return q.deleteBuild()
 }
 
 // ------------
 
 func (q *query) selectBuild() string {
-	colums := getColums(q.data)
+	if data, ok := q.data.(count); ok {
+		if data.column == "" {
+			return fmt.Sprintf(q.template, "COUNT(*)", q.table)
+		}
+		return fmt.Sprintf(q.template, fmt.Sprintf("COUNT(%s)", data.column), q.table)
+	}
+	colums := getColumns(q.data)
 	return fmt.Sprintf(q.template, strings.Join(colums, ", "), q.table)
 }
 
 func (q *query) insertBuild() string {
-	colums := getColums(q.data)
+	colums := getColumns(q.data)
 	placeholders := getPlaceholders(len(colums))
 	return fmt.Sprintf(q.template, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
 }
 
 func (q *query) updateBuild() string {
-	colums := getColums(q.data)
+	colums := getColumns(q.data)
 	placeholders := getPlaceholders(len(colums))
 	return fmt.Sprintf(q.template, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
 }
@@ -89,16 +110,16 @@ func getArguments(data any) (args []any) {
 	return args
 }
 
-func getColums(data any) (colums []string) {
+func getColumns(data any) (columns []string) {
 	v := reflect.ValueOf(data)
 	t := v.Type()
 	for i := range t.NumField() {
 		dbTag := t.Field(i).Tag.Get(tag)
 		if dbTag != "" && dbTag != "-" {
-			colums = append(colums, dbTag)
+			columns = append(columns, dbTag)
 		}
 	}
-	return colums
+	return columns
 }
 
 func getPlaceholders(count int) (placeholders []string) {
