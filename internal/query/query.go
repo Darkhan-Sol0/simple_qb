@@ -86,7 +86,7 @@ func (q *query) selectBuild() (string, error) {
 		}
 		return fmt.Sprintf(q.template, fmt.Sprintf("COUNT(%s)", t), q.table), nil
 	}
-	colums := getColumns(q.data)
+	colums := getSelColumns(q.data)
 	return fmt.Sprintf(q.template, strings.Join(colums, ", "), q.table), nil
 }
 
@@ -136,6 +136,18 @@ func getArguments(data any) (args []any) {
 	return args
 }
 
+func getSelColumns(data any) (columns []string) {
+	v := reflect.ValueOf(data)
+	t := v.Type()
+	for i := range t.NumField() {
+		dbTag := t.Field(i).Tag.Get(tag)
+		if dbTag != "" && dbTag != "-" {
+			columns = append(columns, dbTag)
+		}
+	}
+	return columns
+}
+
 func getColumns(data any) (columns []string) {
 	v := reflect.ValueOf(data)
 	t := v.Type()
@@ -147,17 +159,6 @@ func getColumns(data any) (columns []string) {
 	}
 	return columns
 }
-
-// if v.Kind() == reflect.Slice {
-// 		l := v.Len()
-// 		var st []string
-// 		for i := 0; i < l; i++ {
-// 			st = append(st, "$%d")
-// 			elem := v.Index(i)
-// 			n.nargs = append(n.nargs, elem.Interface())
-// 		}
-// 		n.nquery = append(n.nquery, fmt.Sprintf("%s IN (%s)", n.ncolumn, strings.Join(st, ", ")))
-// 	}
 
 func getPlaceholders(count int) (placeholders []string) {
 	for i := 1; i <= count; i++ {
