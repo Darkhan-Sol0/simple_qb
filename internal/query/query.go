@@ -141,12 +141,23 @@ func getColumns(data any) (columns []string) {
 	t := v.Type()
 	for i := range t.NumField() {
 		dbTag := t.Field(i).Tag.Get(tag)
-		if dbTag != "" && dbTag != "-" {
+		if dbTag != "" && dbTag != "-" && !v.Field(i).IsZero() {
 			columns = append(columns, dbTag)
 		}
 	}
 	return columns
 }
+
+// if v.Kind() == reflect.Slice {
+// 		l := v.Len()
+// 		var st []string
+// 		for i := 0; i < l; i++ {
+// 			st = append(st, "$%d")
+// 			elem := v.Index(i)
+// 			n.nargs = append(n.nargs, elem.Interface())
+// 		}
+// 		n.nquery = append(n.nquery, fmt.Sprintf("%s IN (%s)", n.ncolumn, strings.Join(st, ", ")))
+// 	}
 
 func getPlaceholders(count int) (placeholders []string) {
 	for i := 1; i <= count; i++ {
