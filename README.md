@@ -198,11 +198,11 @@ params := simple_qb.NewParam(
 ``` go
 
 // COUNT всех записей
-query, args := qb.Select(simple_qb.Count("")).Generate()
+query, args := qb.Select(nil).Count("").Generate()
 // SELECT COUNT(*) FROM users
 
 // COUNT конкретного поля
-query, args := qb.Select(simple_qb.Count("id")).
+query, args := qb.Select(nil).Count("id").
     Params(simple_qb.NewParam(
         simple_qb.NewNode("active").Eq(true)
     )).

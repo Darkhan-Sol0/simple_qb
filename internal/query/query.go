@@ -13,10 +13,6 @@ var methodTemplate = map[string]string{
 	"DELETE": "DELETE FROM %s",
 }
 
-type count struct {
-	column string
-}
-
 const tag = "db"
 
 type (
@@ -28,18 +24,12 @@ type (
 	}
 
 	Query interface {
-		SelectGenerate() string
-		InsertGenerate() (string, []any)
-		UpdateGenerate() (string, []any)
-		DeleteGenerate() string
+		SelectGenerate() (string, error)
+		InsertGenerate() (string, []any, error)
+		UpdateGenerate() (string, []any, error)
+		DeleteGenerate() (string, error)
 	}
 )
-
-func Count(data string) count {
-	return count{
-		column: data,
-	}
-}
 
 func New(method, table string, data any) Query {
 	return &query{
@@ -50,49 +40,85 @@ func New(method, table string, data any) Query {
 	}
 }
 
-func (q *query) SelectGenerate() string {
-	return q.selectBuild()
+func (q *query) SelectGenerate() (string, error) {
+	res, err := q.selectBuild()
+	if err != nil {
+		return "", err
+	}
+	return res, nil
 }
 
-func (q *query) InsertGenerate() (string, []any) {
-	return q.insertBuild(), getArguments(q.data)
+func (q *query) InsertGenerate() (string, []any, error) {
+	res, err := q.insertBuild()
+	if err != nil {
+		return "", nil, err
+	}
+	return res, getArguments(q.data), nil
 }
 
-func (q *query) UpdateGenerate() (string, []any) {
-	return q.updateBuild(), getArguments(q.data)
+func (q *query) UpdateGenerate() (string, []any, error) {
+	res, err := q.updateBuild()
+	if err != nil {
+		return "", nil, err
+	}
+	return res, getArguments(q.data), nil
 }
 
-func (q *query) DeleteGenerate() string {
-	return q.deleteBuild()
+func (q *query) DeleteGenerate() (string, error) {
+	res, err := q.deleteBuild()
+	if err != nil {
+		return "", err
+	}
+	return res, nil
 }
 
 // ------------
-
-func (q *query) selectBuild() string {
-	if data, ok := q.data.(count); ok {
-		if data.column == "" {
-			return fmt.Sprintf(q.template, "COUNT(*)", q.table)
+func (q *query) selectBuild() (string, error) {
+	if q.data == nil {
+		return "", fmt.Errorf("data struct is empty")
+	}
+	if q.table == "" {
+		return "", fmt.Errorf("table name is empty")
+	}
+	if t, ok := q.data.(string); ok {
+		if t == "" {
+			t = "*"
 		}
-		return fmt.Sprintf(q.template, fmt.Sprintf("COUNT(%s)", data.column), q.table)
+		return fmt.Sprintf(q.template, fmt.Sprintf("COUNT(%s)", t), q.table), nil
 	}
 	colums := getColumns(q.data)
-	return fmt.Sprintf(q.template, strings.Join(colums, ", "), q.table)
+	return fmt.Sprintf(q.template, strings.Join(colums, ", "), q.table), nil
 }
 
-func (q *query) insertBuild() string {
+func (q *query) insertBuild() (string, error) {
+	if q.data == nil {
+		return "", fmt.Errorf("data struct is empty")
+	}
+	if q.table == "" {
+		return "", fmt.Errorf("table name is empty")
+	}
 	colums := getColumns(q.data)
 	placeholders := getPlaceholders(len(colums))
-	return fmt.Sprintf(q.template, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
+	return fmt.Sprintf(q.template, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", ")), nil
 }
 
-func (q *query) updateBuild() string {
+func (q *query) updateBuild() (string, error) {
+	if q.data == nil {
+		return "", fmt.Errorf("data struct is empty")
+	}
+	if q.table == "" {
+		return "", fmt.Errorf("table name is empty")
+	}
 	colums := getColumns(q.data)
 	placeholders := getPlaceholders(len(colums))
-	return fmt.Sprintf(q.template, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", "))
+	return fmt.Sprintf(q.template, q.table, strings.Join(colums, ", "), strings.Join(placeholders, ", ")), nil
 }
 
-func (q *query) deleteBuild() string {
-	return fmt.Sprintf(q.template, q.table)
+func (q *query) deleteBuild() (string, error) {
+	if q.table == "" {
+		return "", fmt.Errorf("table name is empty")
+	}
+	return fmt.Sprintf(q.template, q.table), nil
 }
 
 // ---------------

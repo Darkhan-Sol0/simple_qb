@@ -9,6 +9,9 @@ import (
 
 type (
 	qSelect struct {
+		tableName string
+		data      any
+
 		query  query.Query
 		params params.Params
 		limit  string
@@ -19,14 +22,21 @@ type (
 		Params(par params.Params) Select
 		Limit(limit, offset int) Select
 		OrderBy(column, order string) Select
-		Generate() (string, []any)
+		Count(column string) Select
+		Generate() (string, []any, error)
 	}
 )
 
 func New(tableName string, data any) Select {
 	return &qSelect{
-		query: query.New("SELECT", tableName, data),
+		tableName: tableName,
+		data:      data,
 	}
+}
+
+func (s *qSelect) Count(column string) Select {
+	s.data = column
+	return s
 }
 
 func (s *qSelect) Params(par params.Params) Select {
@@ -56,8 +66,14 @@ func (s *qSelect) OrderBy(column, order string) Select {
 	return s
 }
 
-func (s *qSelect) Generate() (q string, args []any) {
-	q = s.query.SelectGenerate()
+func (s *qSelect) Generate() (q string, args []any, err error) {
+	s.query = query.New("SELECT", s.tableName, s.data)
+
+	q, err = s.query.SelectGenerate()
+	if err != nil {
+		return "", nil, err
+	}
+
 	if s.params != nil {
 		w, arg := s.params.Generate(0)
 		q = fmt.Sprintf("%s %s", q, w)
@@ -72,5 +88,5 @@ func (s *qSelect) Generate() (q string, args []any) {
 		q = fmt.Sprintf("%s %s", q, s.limit)
 	}
 
-	return q, args
+	return q, args, nil
 }

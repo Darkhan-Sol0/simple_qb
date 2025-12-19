@@ -15,7 +15,7 @@ type (
 
 	Update interface {
 		Params(par params.Params) Update
-		Generate() (string, []any)
+		Generate() (string, []any, error)
 	}
 )
 
@@ -32,13 +32,16 @@ func (s *qUpdate) Params(par params.Params) Update {
 	return s
 }
 
-func (s *qUpdate) Generate() (string, []any) {
+func (s *qUpdate) Generate() (string, []any, error) {
 	if s.params == nil {
-		return "", nil
+		return "", nil, fmt.Errorf("empty params where")
 	}
-	q, args := s.query.UpdateGenerate()
+	q, args, err := s.query.UpdateGenerate()
+	if err != nil {
+		return "", nil, err
+	}
 	w, arg := s.params.Generate(len(args))
 	q = fmt.Sprintf("%s %s", q, w)
 	args = append(args, arg...)
-	return q, args
+	return q, args, nil
 }

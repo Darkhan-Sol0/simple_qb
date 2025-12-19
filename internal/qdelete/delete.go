@@ -15,7 +15,7 @@ type (
 
 	Delete interface {
 		Params(par params.Params) Delete
-		Generate() (string, []any)
+		Generate() (string, []any, error)
 	}
 )
 
@@ -32,12 +32,15 @@ func (s *qDelete) Params(par params.Params) Delete {
 	return s
 }
 
-func (s *qDelete) Generate() (string, []any) {
+func (s *qDelete) Generate() (string, []any, error) {
 	if s.params == nil {
-		return "", nil
+		return "", nil, fmt.Errorf("empty params where")
 	}
-	q := s.query.DeleteGenerate()
+	q, err := s.query.DeleteGenerate()
+	if err != nil {
+		return "", nil, err
+	}
 	w, args := s.params.Generate(0)
 	q = fmt.Sprintf("%s %s", q, w)
-	return q, args
+	return q, args, nil
 }
