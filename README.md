@@ -79,10 +79,12 @@ query, args := qb.Select(User{}).Generate()
 
 // SELECT с условиями
 query, args := qb.Select(User{}).
-    Params(simple_qb.NewParam(
-        simple_qb.NewNode("age").Gr(18).
-        And(simple_qb.NewNode("name").Like("%John%"))
-    )).
+    Params(
+        simple_qb.NewParam(
+            simple_qb.NewNode("age").Gr(18)).
+            And(simple_qb.NewNode("name").Like("%John%")
+        )
+    ).
     Generate()
 // SELECT id, name, age, email FROM users WHERE (age > $1) AND (name LIKE $2)
 
@@ -113,9 +115,11 @@ query, args := qb.Insert(user).
 ```go
 user := User{Name: "John Updated", Age: 26}
 query, args := qb.Update(user).
-    Params(simple_qb.NewParam(
-        simple_qb.NewNode("id").Eq(1)
-    )).
+    Params(
+        simple_qb.NewParam(
+            simple_qb.NewNode("id").Eq(1)
+        )
+    ).
     Generate()
 // UPDATE users SET (name, age) = ROW($1, $2) WHERE (id = $3)
 ```
@@ -124,9 +128,11 @@ query, args := qb.Update(user).
 
 ```go
 query, args := qb.Delete(User{}).
-    Params(simple_qb.NewParam(
-        simple_qb.NewNode("id").Eq(1)
-    )).
+    Params(
+        simple_qb.NewParam(
+            simple_qb.NewNode("id").Eq(1)
+        )
+    ).
     Generate()
 // DELETE FROM users WHERE (id = $1)
 ```
@@ -176,11 +182,13 @@ simple_qb.NewNode("name").Eq("John").And().Like("%Doe%")
 // name = $1 AND name LIKE $2
 
 // Комбинирование нод через AND/OR
-params := simple_qb.NewParam(
+simple_qb.NewParam(
     simple_qb.NewNode("age").Gr(18)
-).And(
+).
+And(
     simple_qb.NewNode("name").Like("%John%")
-).Or(
+).
+Or(
     simple_qb.NewNode("email").NotNull()
 )
 // (age > $1) AND (name LIKE $2) OR (email IS NOT NULL)
@@ -192,7 +200,8 @@ params := simple_qb.NewParam(
 // Сложные вложенные условия
 params := simple_qb.NewParam(
     simple_qb.NewNode("age").Between(18, 65).Or().Null()
-).And(
+).
+And(
     simple_qb.NewNode("name").Like("J%").And().NotEq("")
 )
 // (age BETWEEN $1 AND $2 OR age IS NULL) AND (name LIKE $3 AND name <> $4)
@@ -208,9 +217,11 @@ query, args := qb.Select(nil).Count("").Generate()
 
 // COUNT конкретного поля
 query, args := qb.Select(nil).Count("id").
-    Params(simple_qb.NewParam(
-        simple_qb.NewNode("active").Eq(true)
-    )).
+    Params(
+        simple_qb.NewParam(
+            simple_qb.NewNode("active").Eq(true)
+        )
+    ).
     Generate()
 // SELECT COUNT(id) FROM users WHERE (active = $1)
 ```
@@ -245,15 +256,19 @@ qb.Select(User{}).Limit(10, 20)
 
 ## Полные примеры
 ### Пример 1: Поиск пользователей
-```go
 
+```go
 func FindActiveUsers() (string, []any) {
     qb := simple_qb.New("users")
     
     return qb.Select(User{}).
         Params(
-            simple_qb.NewParam(simple_qb.NewNode("active").Eq(true)).
-            And(simple_qb.NewNode("age").Between(18, 65))
+            simple_qb.NewParam(
+                simple_qb.NewNode("active").Eq(true)
+            ).
+            And(
+                simple_qb.NewNode("age").Between(18, 65)
+            )
         ).
         OrderBy("name", "ASC").
         Limit(50, 0).
@@ -264,16 +279,20 @@ func FindActiveUsers() (string, []any) {
 // ORDER BY name ASC LIMIT 50
 ```
 ### Пример 2: Обновление с комплексным условием
-```go
 
+```go
 func UpdateUserEmail(userID int, newEmail string) (string, []any) {
     user := User{Email: newEmail}
     
     return simple_qb.New("users").
         Update(user).
         Params(
-            simple_qb.NewParam(simple_qb.NewNode("id").Eq(userID)).
-            And(simple_qb.NewNode("active").Eq(true))
+            simple_qb.NewParam(
+                simple_qb.NewNode("id").Eq(userID)
+            ).
+            And(
+                simple_qb.NewNode("active").Eq(true)
+            )
         ).
         Generate()
 }
@@ -281,14 +300,18 @@ func UpdateUserEmail(userID int, newEmail string) (string, []any) {
 // WHERE (id = $2) AND (active = $3)
 ```
 ### Пример 3: Удаление неактивных пользователей
-```go
 
+```go
 func DeleteInactiveUsers() (string, []any) {
     return simple_qb.New("users").
         Delete(User{}).
         Params(
-            simple_qb.NewParam(simple_qb.NewNode("active").Eq(false)).
-            Or(simple_qb.NewNode("last_login").Less(time.Now().AddDate(0, -6, 0)))
+            simple_qb.NewParam(
+                simple_qb.NewNode("active").Eq(false)
+            ).
+            Or(
+                simple_qb.NewNode("last_login").Less(time.Now().AddDate(0, -6, 0))
+            )
         ).
         Generate()
 }

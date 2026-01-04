@@ -1,6 +1,3 @@
-[Russian Version](README.md)
----
-
 # Simple QB: Lightweight SQL Query Builder for PostgreSQL
 
 Simple Query Builder for PGX - A simple yet powerful tool for generating SQL queries when working with PostgreSQL database. Use struct field annotations for automatic query generation based on your models.
@@ -16,13 +13,18 @@ Simple Query Builder for PGX - A simple yet powerful tool for generating SQL que
 
 ## Note
 
-Currently only supports the pgx driver package for working with PostgreSQL
+Currently only for the pgx driver package to work with PostgreSQL.
+
+## Compatibility
+
+✅ **Works with:** [pgx](https://github.com/jackc/pgx)
 
 ## Installation
 
 Add the package to your project:
 
 ```sh
+go get github.com/jackc/pgx/v5
 go get github.com/Darkhan-Sol0/simple_qb
 ```
 
@@ -36,7 +38,7 @@ import "github.com/Darkhan-Sol0/simple_qb"
 
 ## Getting Started
 
-Before using the package, you need to define your data structure with field annotations. The `db:"field_name"` annotation maps struct fields to database columns.
+Before using the package, you need to describe your data structure with field annotations. The `db:"field_name"` annotation establishes correspondence between struct fields and database fields.
 
 ### Example Structure:
 
@@ -51,7 +53,7 @@ type User struct {
 
 | Field          | Purpose                    |
 |----------------|----------------------------|
-| `db:"field_name"` | Database column name       |
+| `db:"field_name"` | Database field name       |
 
 ---
 
@@ -72,10 +74,12 @@ query, args := qb.Select(User{}).Generate()
 
 // SELECT with conditions
 query, args := qb.Select(User{}).
-    Params(simple_qb.NewParam(
-        simple_qb.NewNode("age").Gr(18).
-        And(simple_qb.NewNode("name").Like("%John%"))
-    )).
+    Params(
+        simple_qb.NewParam(
+            simple_qb.NewNode("age").Gr(18)).
+            And(simple_qb.NewNode("name").Like("%John%")
+        )
+    ).
     Generate()
 // SELECT id, name, age, email FROM users WHERE (age > $1) AND (name LIKE $2)
 
@@ -106,9 +110,11 @@ query, args := qb.Insert(user).
 ```go
 user := User{Name: "John Updated", Age: 26}
 query, args := qb.Update(user).
-    Params(simple_qb.NewParam(
-        simple_qb.NewNode("id").Eq(1)
-    )).
+    Params(
+        simple_qb.NewParam(
+            simple_qb.NewNode("id").Eq(1)
+        )
+    ).
     Generate()
 // UPDATE users SET (name, age) = ROW($1, $2) WHERE (id = $3)
 ```
@@ -117,9 +123,11 @@ query, args := qb.Update(user).
 
 ```go
 query, args := qb.Delete(User{}).
-    Params(simple_qb.NewParam(
-        simple_qb.NewNode("id").Eq(1)
-    )).
+    Params(
+        simple_qb.NewParam(
+            simple_qb.NewNode("id").Eq(1)
+        )
+    ).
     Generate()
 // DELETE FROM users WHERE (id = $1)
 ```
@@ -185,40 +193,46 @@ params := simple_qb.NewParam(
 // Complex nested conditions
 params := simple_qb.NewParam(
     simple_qb.NewNode("age").Between(18, 65).Or().Null()
-).And(
+).
+And(
     simple_qb.NewNode("name").Like("J%").And().NotEq("")
 )
 // (age BETWEEN $1 AND $2 OR age IS NULL) AND (name LIKE $3 AND name <> $4)
-
 ```
-## Additional Features
-### COUNT Queries
-```go
 
+## Additional Features
+
+### COUNT Queries
+
+```go
 // COUNT all records
 query, args := qb.Select(nil).Count("").Generate()
 // SELECT COUNT(*) FROM users
 
 // COUNT specific field
 query, args := qb.Select(nil).Count("id").
-    Params(simple_qb.NewParam(
-        simple_qb.NewNode("active").Eq(true)
-    )).
+    Params(
+        simple_qb.NewParam(
+            simple_qb.NewNode("active").Eq(true)
+        )
+    ).
     Generate()
 // SELECT COUNT(id) FROM users WHERE (active = $1)
 ```
-### ORDER BY
-```go
 
+### ORDER BY
+
+```go
 qb.Select(User{}).OrderBy("age", "DESC")
 // ORDER BY age DESC
 
 qb.Select(User{}).OrderBy("name", "ASC")
 // ORDER BY name ASC
 ```
-### LIMIT and OFFSET
-```go
 
+### LIMIT and OFFSET
+
+```go
 // Simple LIMIT
 qb.Select(User{}).Limit(10, 0)
 // LIMIT 10
@@ -238,17 +252,22 @@ Simple generation of SQL query strings.
 ---
 
 ## Complete Examples
-### Example 1: Finding Users
-```go
 
+### Example 1: Finding Users
+
+```go
 func FindActiveUsers() (string, []any) {
     qb := simple_qb.New("users")
     
     return qb.Select(User{}).
-        Params(simple_qb.NewParam(
-            simple_qb.NewNode("active").Eq(true).
-            And(simple_qb.NewNode("age").Between(18, 65))
-        )).
+        Params(
+            simple_qb.NewParam(
+                simple_qb.NewNode("active").Eq(true)
+            ).
+            And(
+                simple_qb.NewNode("age").Between(18, 65)
+            )
+        ).
         OrderBy("name", "ASC").
         Limit(50, 0).
         Generate()
@@ -257,33 +276,43 @@ func FindActiveUsers() (string, []any) {
 // WHERE (active = $1) AND (age BETWEEN $2 AND $3)
 // ORDER BY name ASC LIMIT 50
 ```
-### Example 2: Update with Complex Condition
-```go
 
+### Example 2: Update with Complex Condition
+
+```go
 func UpdateUserEmail(userID int, newEmail string) (string, []any) {
     user := User{Email: newEmail}
     
     return simple_qb.New("users").
         Update(user).
-        Params(simple_qb.NewParam(
-            simple_qb.NewNode("id").Eq(userID).
-            And(simple_qb.NewNode("active").Eq(true))
-        )).
+        Params(
+            simple_qb.NewParam(
+                simple_qb.NewNode("id").Eq(userID)
+            ).
+            And(
+                simple_qb.NewNode("active").Eq(true)
+            )
+        ).
         Generate()
 }
 // UPDATE users SET (email) = ROW($1) 
 // WHERE (id = $2) AND (active = $3)
 ```
-### Example 3: Deleting Inactive Users
-```go
 
+### Example 3: Deleting Inactive Users
+
+```go
 func DeleteInactiveUsers() (string, []any) {
     return simple_qb.New("users").
         Delete(User{}).
-        Params(simple_qb.NewParam(
-            simple_qb.NewNode("active").Eq(false).
-            Or(simple_qb.NewNode("last_login").Less(time.Now().AddDate(0, -6, 0)))
-        )).
+        Params(
+            simple_qb.NewParam(
+                simple_qb.NewNode("active").Eq(false)
+            ).
+            Or(
+                simple_qb.NewNode("last_login").Less(time.Now().AddDate(0, -6, 0))
+            )
+        ).
         Generate()
 }
 // DELETE FROM users 
@@ -304,17 +333,15 @@ DELETE FROM users WHERE num = $1
 ---
 
 # Notes
+
 ## Supported Go Versions
 
 - Minimum supported Go version: 1.22+
 
 ## Limitations
-
-    PostgreSQL syntax only
-
-    No JOIN support (in development)
-
-    No GROUP BY and HAVING support (in development)
+Package only for driver **pgx**
+- PostgreSQL syntax only
+- Placeholders format `$1, $2, $3...`
 
 ---
 
@@ -330,10 +357,8 @@ If you have questions or suggestions for improvement, contact the author through
 
 ## PS
 
-**Note:** This package is experimental and actively developed. If you'd like to contribute to development or provide feedback, please contact the author.
+**Note:** This package is experimental and actively developed. If you'd like to participate in development or leave feedback, please contact the author.
 
 ## ToDo
 
 - Not sure what else is needed yet.
-
----
