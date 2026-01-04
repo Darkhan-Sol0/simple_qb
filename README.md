@@ -18,11 +18,16 @@ Simple Query Builder for PGX - Простой и мощный инструмен
 
 Пока для пакета драйвера pgx для работы в PostgreSQL
 
+## Совместимость
+
+✅ **Работает с:** [pgx](https://github.com/jackc/pgx)
+
 ## Установка
 
 Добавьте пакет в ваш проект:
 
 ```sh
+go get github.com/jackc/pgx/v5
 go get github.com/Darkhan-Sol0/simple_qb
 ```
 
@@ -246,10 +251,10 @@ func FindActiveUsers() (string, []any) {
     qb := simple_qb.New("users")
     
     return qb.Select(User{}).
-        Params(simple_qb.NewParam(
-            simple_qb.NewNode("active").Eq(true).
+        Params(
+            simple_qb.NewParam(simple_qb.NewNode("active").Eq(true)).
             And(simple_qb.NewNode("age").Between(18, 65))
-        )).
+        ).
         OrderBy("name", "ASC").
         Limit(50, 0).
         Generate()
@@ -266,10 +271,10 @@ func UpdateUserEmail(userID int, newEmail string) (string, []any) {
     
     return simple_qb.New("users").
         Update(user).
-        Params(simple_qb.NewParam(
-            simple_qb.NewNode("id").Eq(userID).
+        Params(
+            simple_qb.NewParam(simple_qb.NewNode("id").Eq(userID)).
             And(simple_qb.NewNode("active").Eq(true))
-        )).
+        ).
         Generate()
 }
 // UPDATE users SET (email) = ROW($1) 
@@ -281,10 +286,10 @@ func UpdateUserEmail(userID int, newEmail string) (string, []any) {
 func DeleteInactiveUsers() (string, []any) {
     return simple_qb.New("users").
         Delete(User{}).
-        Params(simple_qb.NewParam(
-            simple_qb.NewNode("active").Eq(false).
+        Params(
+            simple_qb.NewParam(simple_qb.NewNode("active").Eq(false)).
             Or(simple_qb.NewNode("last_login").Less(time.Now().AddDate(0, -6, 0)))
-        )).
+        ).
         Generate()
 }
 // DELETE FROM users 
@@ -304,17 +309,24 @@ DELETE FROM users WHERE num = $1
 ---
 
 # Примечания
+
+
+### 3. В разделе "Примечание" добавь уточнение:
+
+
 ## Поддерживаемые версии Go
 
 - Минимальная поддерживаемая версия Go: 1.22+
 
 ## Ограничения
 
-    Только PostgreSQL синтаксис
+```markdown
+Пакет разработан специально для работы с драйвером **pgx** для PostgreSQL и использует:
+- PostgreSQL-специфичный синтаксис
+- Плейсхолдеры в формате `$1, $2, $3...`
+- Типы данных PostgreSQL
+```
 
-    Нет поддержки JOIN (в разработке)
-
-    Нет поддержки GROUP BY и HAVING (в разработке)
 ---
 
 ## Авторские права и лицензия
